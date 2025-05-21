@@ -1209,75 +1209,24 @@ YZD,Azerbaijan UN Diplomat
       }
 
       // ─── build the facts block with population, languages, fun fact ───────────────
-     <!-- … inside <script> … -->
-    async function lookupExtras(countryName) {
-      const flagEl = document.getElementById('flag');
-      const countEl = document.getElementById('count');
-      const factsEl = document.getElementById('facts');
-
-      // fetch REST summary (quick fact)
-      let wikiExtract = '';
-      try {
-        const res = await fetch(
-          `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(countryName)}`
-        );
-        if (res.ok) {
-          const j = await res.json();
-          wikiExtract = j.extract || '';
-        }
-      } catch {}
-
-      // ─── BUILD THE FACTS BLOCK ───────────────────────────────────────────
-      let popText = '', langText = '', factText = '';
-
-      // 1) Try scraping population from Wikipedia infobox
-      try {
-        const apiUrl = `https://en.wikipedia.org/w/api.php?` +
-          new URLSearchParams({
-            action:   'parse',
-            page:     countryName,
-            prop:     'text',
-            format:   'json',
-            origin:   '*'
-          });
-        const wp = await fetch(apiUrl).then(r => r.json());
-        const html = wp.parse.text['*'];
-        const doc  = new DOMParser().parseFromString(html, 'text/html');
-        // find first “Population” row
-        const popRow = Array.from(doc.querySelectorAll('table.infobox tr'))
-          .find(tr => {
-            const th = tr.querySelector('th');
-            return th && /population/i.test(th.textContent);
-          });
-        if (popRow) {
-          const td = popRow.querySelector('td');
-          popText = `<div><strong>Population:</strong> ${td.textContent.trim()}</div>`;
-        }
-      } catch(e) {
-        console.warn('infobox scrape failed', e);
+      let popText = '', langText = '', funFactText = '', moreText = '';
+      if (countryData) {
+        const pop = countryData.population.toLocaleString();
+        const langs = countryData.languages 
+          ? Object.values(countryData.languages).join(', ')
+          : '—';
+        popText = `<div><strong>Population:</strong> ${pop}</div>`;
+        langText= `<div><strong>Languages:</strong> ${langs}</div>`;
       }
-
-      // 2) Fallback to REST-Countries population if needed
-      if (!popText && countryData?.population) {
-        popText = `<div><strong>Population:</strong> ${countryData.population.toLocaleString()}</div>`;
-      }
-
-      // 3) Languages from REST-Countries
-      if (countryData?.languages) {
-        const langs = Object.values(countryData.languages).join(', ');
-        langText = `<div><strong>Languages:</strong> ${langs}</div>`;
-      }
-
-      // 4) Quick fact from the REST summary
       if (wikiExtract) {
-        const sentence = wikiExtract.split(/\. +/)[0].trim() + '.';
-        factText = `<div><strong>Quick Fact:</strong> ${sentence}</div>`;
+        const parts = wikiExtract.split(/\. +/);
+        funFactText = parts[0].endsWith('.') ? parts[0] : parts[0] + '.';
+        moreText    = parts.slice(1).join('. ') + (parts.length>1?'.':'');
+        funFactText = `<div><strong>Fun Fact:</strong> ${funFactText}</div>`;
+        moreText    = moreText ? `<div>${moreText}</div>` : '';
       }
 
-      factsEl.innerHTML = popText + langText + factText;
-
-    }
-      
+      factsEl.innerHTML = popText + langText + funFactText + moreText;
     }
 
     // ─── 5) Button logic ─────────────────────────────────────────────────────────
