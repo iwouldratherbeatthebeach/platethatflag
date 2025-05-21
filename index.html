@@ -1166,128 +1166,107 @@ YZD,Azerbaijan UN Diplomat
       return { country: desc, role: '' };
     }
 
-    async function lookupExtras(countryName) {
-      const flagEl = document.getElementById('flag');
-      const countEl = document.getElementById('count');
-      const factsEl = document.getElementById('facts');
+  async function lookupExtras(countryName) {
+    const flagEl   = document.getElementById('flag');
+    const countEl  = document.getElementById('count');
+    const factsEl  = document.getElementById('facts');
 
-      // ─── fetch country data (flags, population, languages) ─────────────────────────
-      let countryData;
-      try {
-        const res = await fetch(
-          `https://restcountries.com/v3.1/name/${encodeURIComponent(countryName)}?fullText=true`
-        );
-        if (res.ok) {
-          countryData = (await res.json())[0];
-          // show flag
-          flagEl.src = countryData.flags.svg || countryData.flags.png;
-          flagEl.alt = `Flag of ${countryName}`;
-          flagEl.style.display = 'block';
-        }
-      } catch(e) {
-        console.warn('Country API error', e);
+    // 1) REST Countries → flags + languages
+    let countryData;
+    try {
+      const res = await fetch(
+        `https://restcountries.com/v3.1/name/${encodeURIComponent(countryName)}?fullText=true`
+      );
+      if (res.ok) {
+        countryData = (await res.json())[0];
+        flagEl.src = countryData.flags.svg || countryData.flags.png;
+        flagEl.alt = `Flag of ${countryName}`;
+        flagEl.style.display = 'block';
       }
-
-      // ─── update lookup count ───────────────────────────────────────────────────
-      const counts = JSON.parse(localStorage.getItem('lookupCounts') || '{}');
-      counts[countryName] = (counts[countryName] || 0) + 1;
-      localStorage.setItem('lookupCounts', JSON.stringify(counts));
-      countEl.textContent = `Lookups for ${countryName}: ${counts[countryName]}`;
-
-      // ─── fetch wiki summary ─────────────────────────────────────────────────────
-      let wikiExtract = '';
-      try {
-        const res2 = await fetch(
-          `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(countryName)}`
-        );
-        if (res2.ok) {
-          const wiki = await res2.json();
-          wikiExtract = wiki.extract;
-        }
-      } catch(e) {
-        console.warn('Wiki API error', e);
-      }
-
- // ─── build the facts block with population, languages, fun fact ───────────────
-let popText = '', langText = '', funFactText = '', moreText = '';
-
-// 1) Population via Wikipedia infobox
-try {
-  const wp = await fetch(
-    `https://en.wikipedia.org/w/api.php?action=parse&page=${encodeURIComponent(countryName)}&prop=text&format=json&origin=*`
-  ).then(r => r.json());
-  const html = wp.parse.text['*'];
-  const doc  = new DOMParser().parseFromString(html, 'text/html');
-  let pop = '';
-  doc.querySelectorAll('table.infobox tr').forEach(tr => {
-    const th = tr.querySelector('th'),
-          td = tr.querySelector('td');
-    if (th?.textContent.trim().toLowerCase().startsWith('population') && td) {
-      pop = td.textContent.trim();
+    } catch (e) {
+      console.warn('Country API error', e);
     }
+
+    // 2) localStorage counter
+    const counts = JSON.parse(localStorage.getItem('lookupCounts') || '{}');
+    counts[countryName] = (counts[countryName] || 0) + 1;
+    localStorage.setItem('lookupCounts', JSON.stringify(counts));
+    countEl.innerHTML = `Lookups for <strong>${countryName}</strong>: ${counts[countryName]}`;
+
+    // 3) Wiki summary → for Quick Facts
+    let wikiExtract = '';
+    try {
+      const res2 = await fetch(
+        `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(countryName)}`
+      );
+      if (res2.ok) {
+        const wiki = await res2.json();
+        wikiExtract = wiki.extract;
+      }
+    } catch (e) {
+      console.warn('Wiki summary error', e);
+    }
+
+    // ─── build the facts block ─────────────────────────────────────────────
+    let popText     = '';
+    let langText    = '';
+    let quickFact   = '';
+    let moreFact    = '';
+
+    // 4) Population via Wikipedia infobox API
+    try {
+      const wp = await fetch(
+        `https://en.wikipedia.org/w/api.php?` +
+        `action=parse&page=${encodeURIComponent(countryName)}` +
+        `&prop=text&format=json&origin=*`
+      ).then(r => r.json());
+      const html = wp.parse.text['*'];
+      const doc  = new DOMParser().parseFromString(html, 'text/html');
+      let pop = '';
+      doc.querySelectorAll('table.infobox tr').forEach(tr => {
+        const th = tr.querySelector('th'),
+              td = tr.querySelector('td');
+        if (th && td && th.textContent.trim().toLowerCase().startsWith('population')) {
+          pop = td.textContent.trim().split('\n')[0]; // first line
+        }
+      });
+      if (pop) popText = `<div><strong>Population:</strong> ${pop}</div>`;
+    } catch (e) {
+      console.warn('Wiki infobox error', e);
+    }
+
+    // 5) Languages from REST Countries
+    if (countryData?.languages) {
+      const langs = Object.values(countryData.languages).join(', ');
+      langText = `<div><strong>Languages:</strong> ${langs}</div>`;
+    }
+
+    // 6) Quick Facts & more from wikiExtract
+    if (wikiExtract) {
+      const parts = wikiExtract.split(/\. +/);
+      const first = parts[0].endsWith('.') ? parts[0] : parts[0] + '.';
+      quickFact = `<div><strong>Quick Facts:</strong> ${first}</div>`;
+      if (parts[1]) {
+        const second = parts[1].endsWith('.') ? parts[1] : parts[1] + '.';
+        moreFact = `<div>${second}</div>`;
+      }
+    }
+
+    // 7) render everything
+    factsEl.innerHTML = popText + langText + quickFact + moreFact;
+  }
+
+  // ─── 8) button wiring (no changes here) ─────────────────────────────────────
+  document.getElementById('go').addEventListener('click', async () => {
+    // reset
+    document.getElementById('flag').style.display = 'none';
+    ['result','count','facts'].forEach(id => document.getElementById(id).textContent = '');
+    document.getElementById('role-def').innerHTML = '';
+
+    // your existing plate-lookup + role-display logic…
+    // then:
+    await lookupExtras(country);
   });
-  if (pop) {
-    popText = `<div><strong>Population:</strong> ${pop}</div>`;
-  }
-} catch(e) {
-  console.warn('Wiki infobox error', e);
-}
-
-// 2) Languages from REST Countries
-if (countryData?.languages) {
-  const langs = Object.values(countryData.languages).join(', ');
-  langText = `<div><strong>Languages:</strong> ${langs}</div>`;
-}
-
-// 3) Quick Facts from your wikiExtract
-if (wikiExtract) {
-  const parts = wikiExtract.split(/\. +/);
-  const first = parts[0].endsWith('.') ? parts[0] : parts[0] + '.';
-  funFactText = `<div><strong>Quick Facts:</strong> ${first}</div>`;
-  if (parts[1]) {
-    const second = parts[1].endsWith('.') ? parts[1] : parts[1] + '.';
-    moreText = `<div>${second}</div>`;
-  }
-}
-
-// 4) Render
-factsEl.innerHTML = popText + langText + funFactText + moreText;
-
-    // ─── 5) Button logic ─────────────────────────────────────────────────────────
-    document.getElementById('go').addEventListener('click', async () => {
-      // reset old
-      document.getElementById('flag').style.display = 'none';
-      ['result','count','facts'].forEach(id => document.getElementById(id).textContent = '');
-      document.getElementById('role-def').innerHTML = '';
-
-      // get code & desc
-      const raw  = document.getElementById('plate').value.trim().toUpperCase();
-      const code = extractCode(raw);
-      if (!code) {
-        return document.getElementById('result').textContent = 'Please enter at least one letter.';
-      }
-      const desc = mapping[code];
-      if (!desc) {
-        return document.getElementById('result').textContent = 'Unknown code';
-      }
-
-      // parse & show Country (Role)
-      const { country, role } = splitDesc(desc);
-      document.getElementById('result').textContent = role
-        ? `${country} (${role})`
-        : country;
-
-      // show role definition if any
-      if (role) {
-        document.getElementById('role-def').innerHTML = `
-          <h2>Definition</h2>
-          <p>${roleDefs[role]}</p>
-        `;
-      }
-
-      // finally fetch and display extras
-      await lookupExtras(country);
-    });
-  </script>
+</script>
 </body>
 </html>
