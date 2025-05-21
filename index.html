@@ -1210,25 +1210,51 @@ YZD,Azerbaijan UN Diplomat
         console.warn('Wiki API error', e);
       }
 
-      // ─── build the facts block with population, languages, fun fact ───────────────
-      let popText = '', langText = '', funFactText = '', moreText = '';
-      if (countryData) {
-        const pop = countryData.population.toLocaleString();
-        const langs = countryData.languages 
-          ? Object.values(countryData.languages).join(', ')
-          : '—';
-        popText = `<div><strong>Population:</strong> ${pop}</div>`;
-        langText= `<div><strong>Languages:</strong> ${langs}</div>`;
-      }
-      if (wikiExtract) {
-        const parts = wikiExtract.split(/\. +/);
-        funFactText = parts[0].endsWith('.') ? parts[0] : parts[0] + '.';
-        moreText    = parts.slice(1).join('. ') + (parts.length>1?'.':'');
-        funFactText = `<div><strong>Quick Facts:</strong> ${funFactText}</div>`;
-        moreText    = moreText ? `<div>${moreText}</div>` : '';
-      }
+     // ─── build the facts block with population, languages, fun fact ───────────────
+let popText = '', langText = '', funFactText = '', moreText = '';
 
-      factsEl.innerHTML = popText + langText + funFactText + moreText;
+// 1) Try scraping the infobox population from Wikipedia:
+try {
+  const params = new URLSearchParams({
+    action: 'parse',
+    page: countryName,
+    prop: 'text',
+    format: 'json',
+    origin: '*'
+  });
+  const res = await fetch(`https://en.wikipedia.org/w/api.php?${params}`);
+  const wp  = await res.json();
+  const html = wp.parse.text['*'];
+  const doc  = new DOMParser().parseFromString(html, 'text/html');
+  const popRow = Array.from(doc.querySelectorAll('table.infobox tr'))
+    .find(tr => tr.querySelector('th')?.textContent.toLowerCase().includes('population'));
+  if (popRow) {
+    popText = `<div><strong>Population:</strong> ${popRow.querySelector('td').textContent.trim()}</div>`;
+  }
+} catch(e) {
+  console.warn('Infobox scrape failed', e);
+}
+
+// 2) Fallback to REST-Countries population
+if (!popText && countryData?.population) {
+  popText = `<div><strong>Population:</strong> ${countryData.population.toLocaleString()}</div>`;
+}
+
+// 3) Languages (same as before)
+if (countryData?.languages) {
+  const langs = Object.values(countryData.languages).join(', ');
+  langText = `<div><strong>Languages:</strong> ${langs}</div>`;
+}
+
+// 4) Quick-fact from the summary
+if (wikiExtract) {
+  const first = wikiExtract.split(/\. +/)[0].trim() + '.';
+  funFactText = `<div><strong>Quick Fact:</strong> ${first}</div>`;
+}
+
+// 5) Render
+factsEl.innerHTML = popText + langText + funFactText + moreText;
+
     }
 
     // ─── 5) Button logic ─────────────────────────────────────────────────────────
