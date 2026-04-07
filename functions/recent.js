@@ -3,8 +3,9 @@ export async function onRequestGet(context) {
     const { env } = context;
 
     const result = await env.DB.prepare(`
-      SELECT country, plate_code, queried_at, ip_country
+      SELECT country, MAX(queried_at) AS queried_at
       FROM query_events
+      GROUP BY country
       ORDER BY queried_at DESC
       LIMIT 5
     `).all();
