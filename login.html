@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login · Flag That Plate</title>
+  <link rel="icon" type="image/png" href="/icon.png" />
+
+  <style>
+    :root {
+      --bg-1: #020617;
+      --bg-2: #0f172a;
+      --panel: rgba(15, 23, 42, 0.9);
+      --border: rgba(255,255,255,0.08);
+      --text: #f8fafc;
+      --muted: #cbd5e1;
+      --accent: #38bdf8;
+      --accent-2: #2563eb;
+      --good: #86efac;
+      --good-bg: rgba(34, 197, 94, 0.12);
+      --good-border: rgba(34, 197, 94, 0.24);
+      --warn-bg: rgba(245, 158, 11, 0.12);
+      --warn-border: rgba(245, 158, 11, 0.28);
+      --warn-text: #fde68a;
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top, rgba(56,189,248,0.14), transparent 35%),
+        linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
+      min-height: 100vh;
+    }
+
+    .wrap {
+      width: min(100%, 760px);
+      margin: 0 auto;
+      padding: 24px 16px 40px;
+    }
+
+    .nav {
+      display: flex;
+      justify-content: flex-end;
+      gap: 16px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .nav a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .hero {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 {
+      margin: 0 0 10px;
+      font-size: clamp(2rem, 4vw, 3rem);
+    }
+
+    .hero p {
+      margin: 0 auto;
+      max-width: 620px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+    }
+
+    h2 {
+      margin-top: 0;
+      font-size: 1.1rem;
+    }
+
+    p {
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    input, button {
+      width: 100%;
+      min-height: 50px;
+      border-radius: 12px;
+      border: 0;
+      font-size: 1rem;
+      margin-top: 10px;
+    }
+
+    input {
+      background: #fff;
+      color: #111827;
+      padding: 0 14px;
+    }
+
+    button {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .message {
+      display: none;
+      margin-top: 16px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      line-height: 1.6;
+    }
+
+    .message.show {
+      display: block;
+    }
+
+    .message.good {
+      background: var(--good-bg);
+      border: 1px solid var(--good-border);
+      color: var(--good);
+    }
+
+    .message.bad {
+      background: var(--warn-bg);
+      border: 1px solid var(--warn-border);
+      color: var(--warn-text);
+    }
+
+    .account-box {
+      margin-top: 18px;
+    }
+
+    @media (max-width: 700px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="nav">
+      <a href="/">Home</a>
+      <a href="/login.html">Login</a>
+      <a href="/about.html">About</a>
+      <a href="/leaderboard.html">Leaderboard</a>
+    </div>
+
+    <div class="hero">
+      <h1>Account</h1>
+      <p>
+        Sign in or create an account to have searches and submissions recorded under your username.
+        Otherwise, your activity will appear as Anonymous.
+      </p>
+    </div>
+
+    <div id="current-account" class="card account-box"></div>
+
+    <div class="grid" id="auth-grid">
+      <div class="card">
+        <h2>Login</h2>
+        <p>Use your existing username and password.</p>
+        <input id="login-username" placeholder="Username" />
+        <input id="login-password" type="password" placeholder="Password" />
+        <button id="login-btn" type="button">Login</button>
+      </div>
+
+      <div class="card">
+        <h2>Create Account</h2>
+        <p>Create a new account to appear on the leaderboard.</p>
+        <input id="signup-username" placeholder="Username" />
+        <input id="signup-password" type="password" placeholder="Password" />
+        <button id="signup-btn" type="button">Sign Up</button>
+      </div>
+    </div>
+
+    <div id="message" class="message"></div>
+  </div>
+
+  <script>
+    function setMessage(text, type) {
+      const el = document.getElementById("message");
+      el.textContent = text;
+      el.className = `message show ${type}`;
+    }
+
+    async function loadMe() {
+      const res = await fetch("/me");
+      const data = await res.json();
+
+      const current = document.getElementById("current-account");
+      const authGrid = document.getElementById("auth-grid");
+
+      if (data.loggedIn) {
+        current.innerHTML = `
+          <h2>Signed In</h2>
+          <p>You are signed in as <strong>${data.username}</strong>.</p>
+          <button id="logout-btn" type="button">Logout</button>
+        `;
+        authGrid.style.display = "none";
+
+        document.getElementById("logout-btn").addEventListener("click", logout);
+      } else {
+        current.innerHTML = `
+          <h2>Not Signed In</h2>
+          <p>You are currently browsing as <strong>Anonymous</strong>.</p>
+        `;
+        authGrid.style.display = "grid";
+      }
+    }
+
+    async function login() {
+      const username = document.getElementById("login-username").value.trim();
+      const password = document.getElementById("login-password").value;
+
+      try {
+        const res = await fetch("/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          setMessage(data.error || "Login failed.", "bad");
+          return;
+        }
+
+        setMessage(`Signed in as ${data.username}.`, "good");
+        await loadMe();
+      } catch (e) {
+        setMessage("Could not log in right now.", "bad");
+      }
+    }
+
+    async function signup() {
+      const username = document.getElementById("signup-username").value.trim();
+      const password = document.getElementById("signup-password").value;
+
+      try {
+        const res = await fetch("/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          setMessage(data.error || "Sign up failed.", "bad");
+          return;
+        }
+
+        setMessage(`Account created. Signed in as ${data.username}.`, "good");
+        await loadMe();
+      } catch (e) {
+        setMessage("Could not sign up right now.", "bad");
+      }
+    }
+
+    async function logout() {
+      try {
+        await fetch("/logout", { method: "POST" });
+        setMessage("Signed out.", "good");
+        await loadMe();
+      } catch (e) {
+        setMessage("Could not log out right now.", "bad");
+      }
+    }
+
+    document.getElementById("login-btn").addEventListener("click", login);
+    document.getElementById("signup-btn").addEventListener("click", signup);
+
+    loadMe();
+  </script>
+</body>
+</html>
