@@ -14,12 +14,15 @@
       --bg-2: #0f172a;
       --panel: rgba(15, 23, 42, 0.88);
       --panel-2: rgba(30, 41, 59, 0.92);
-      --border: rgba(255, 255, 255, 0.1);
+      --border: rgba(255, 255, 255, 0.08);
       --text: #f8fafc;
       --muted: #cbd5e1;
       --subtle: #94a3b8;
       --accent: #38bdf8;
       --accent-2: #2563eb;
+      --warn-bg: rgba(245, 158, 11, 0.12);
+      --warn-border: rgba(245, 158, 11, 0.28);
+      --warn-text: #fde68a;
       --shadow: 0 18px 42px rgba(0, 0, 0, 0.35);
       --radius: 18px;
     }
@@ -31,44 +34,43 @@
       font-family: Inter, system-ui, Arial, sans-serif;
       color: var(--text);
       background:
-        radial-gradient(circle at top, rgba(56, 189, 248, 0.16), transparent 35%),
+        radial-gradient(circle at top, rgba(56, 189, 248, 0.14), transparent 35%),
         linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
       min-height: 100vh;
     }
 
     .wrap {
-      width: min(100%, 1180px);
+      width: min(100%, 1120px);
       margin: 0 auto;
-      padding: 20px 16px 40px;
+      padding: 28px 16px 40px;
     }
 
     .hero {
       text-align: center;
-      padding: 20px 8px 10px;
-      margin-bottom: 8px;
+      padding: 18px 8px 8px;
+      margin-bottom: 18px;
     }
 
     .hero h1 {
       margin: 0 0 12px;
-      font-size: clamp(2.3rem, 4.8vw, 3.6rem);
+      font-size: clamp(2.3rem, 4.8vw, 3.8rem);
       line-height: 1.02;
       letter-spacing: -0.02em;
     }
 
     .hero p {
       margin: 0 auto;
-      max-width: 760px;
+      max-width: 720px;
       color: var(--muted);
-      font-size: 1.03rem;
+      font-size: 1.04rem;
       line-height: 1.6;
     }
 
     .layout {
       display: grid;
-      grid-template-columns: 1.55fr 0.85fr;
+      grid-template-columns: 1.5fr 0.85fr;
       gap: 20px;
       align-items: start;
-      margin-top: 18px;
     }
 
     .card {
@@ -80,8 +82,9 @@
       padding: 18px;
     }
 
-    .card + .card {
-      margin-top: 18px;
+    .sidebar-sticky {
+      position: sticky;
+      top: 16px;
     }
 
     .lookup-help {
@@ -94,7 +97,7 @@
       display: grid;
       grid-template-columns: 1fr auto;
       gap: 12px;
-      margin-top: 8px;
+      align-items: center;
     }
 
     input, button {
@@ -120,10 +123,20 @@
       white-space: nowrap;
     }
 
-    .results {
-      display: grid;
+    .section-title {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+      color: var(--text);
+    }
+
+    .result-stack {
+      display: none;
       gap: 14px;
       margin-top: 18px;
+    }
+
+    .result-stack.show {
+      display: grid;
     }
 
     .box {
@@ -137,20 +150,17 @@
       font-size: 1.35rem;
       font-weight: 800;
       margin-bottom: 14px;
-      text-align: left;
     }
 
     .flag-wrap {
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 120px;
     }
 
     #flag {
       display: none;
       width: min(260px, 100%);
-      margin: 0 auto;
       border-radius: 12px;
       box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28);
     }
@@ -170,17 +180,24 @@
       margin-top: 10px;
     }
 
-    #role-def h2,
-    .panel-title {
-      margin-top: 0;
-      margin-bottom: 10px;
-      font-size: 1.08rem;
-      color: var(--text);
+    .unknown-box {
+      display: none;
+      margin-top: 18px;
+      padding: 16px 18px;
+      border-radius: 16px;
+      background: var(--warn-bg);
+      border: 1px solid var(--warn-border);
+      color: var(--warn-text);
+      line-height: 1.6;
     }
 
-    .link-list,
+    .unknown-box.show {
+      display: block;
+    }
+
     .top-list,
-    .recent-list {
+    .recent-list,
+    .link-list {
       list-style: none;
       margin: 0;
       padding: 0;
@@ -213,15 +230,8 @@
       text-decoration: none;
     }
 
-    .muted { color: var(--muted); }
-
-    .sidebar-sticky {
-      position: sticky;
-      top: 16px;
-    }
-
     footer {
-      margin-top: 24px;
+      margin-top: 26px;
       text-align: center;
       color: var(--muted);
       font-size: 0.95rem;
@@ -253,7 +263,7 @@
       }
 
       .wrap {
-        padding: 14px 12px 28px;
+        padding: 16px 12px 28px;
       }
 
       .card {
@@ -284,7 +294,9 @@
             <button id="go">Lookup</button>
           </div>
 
-          <div class="results">
+          <div id="unknown-box" class="unknown-box"></div>
+
+          <div id="result-stack" class="result-stack">
             <div class="box">
               <div id="result"></div>
               <div class="flag-wrap">
@@ -300,9 +312,9 @@
             <div class="box" id="role-def"></div>
 
             <div class="box">
-              <h2 class="panel-title">Useful Links</h2>
+              <h2 class="section-title">Useful Links</h2>
               <ul id="country-links" class="link-list">
-                <li><span class="muted">Run a lookup to load country links.</span></li>
+                <li><span>Run a lookup to load country links.</span></li>
               </ul>
             </div>
           </div>
@@ -311,14 +323,14 @@
 
       <div class="sidebar-sticky">
         <div class="card">
-          <h2 class="panel-title">Most Queried Countries</h2>
+          <h2 class="section-title">Most Queried Countries</h2>
           <ul id="top-countries-list" class="top-list">
             <li><span>Loading...</span></li>
           </ul>
         </div>
 
         <div class="card">
-          <h2 class="panel-title">Recent Searches</h2>
+          <h2 class="section-title">Recent Searches</h2>
           <ul id="recent-searches-list" class="recent-list">
             <li><span>Loading...</span></li>
           </ul>
@@ -340,231 +352,277 @@ CAA,Republic of the Congo Consul
 DAA,Republic of the Congo Diplomat
 SAA,Republic of the Congo Staff
 AAD,Republic of the Congo UN Diplomat
+
 AB,Senegal
 CAB,Senegal Consul
 DAB,Senegal Diplomat
 SAB,Senegal Staff
 ABD,Senegal UN Diplomat
+
 AC,Côte d’Ivoire
 CAC,Côte d’Ivoire Consul
 DAC,Côte d’Ivoire Diplomat
 SAC,Côte d’Ivoire Staff
 ACD,Côte d’Ivoire UN Diplomat
+
 AD,Burkina Faso
 CAD,Burkina Faso Consul
 DAD,Burkina Faso Diplomat
 SAD,Burkina Faso Staff
 ADD,Burkina Faso UN Diplomat
+
 AE,Uzbekistan
 CAE,Uzbekistan Consul
 DAE,Uzbekistan Diplomat
 SAE,Uzbekistan Staff
 AED,Uzbekistan UN Diplomat
+
 AF,Japan
 CAF,Japan Consul
 DAF,Japan Diplomat
 SAF,Japan Staff
 AFD,Japan UN Diplomat
+
 AG,Ghana
 CAG,Ghana Consul
 DAG,Ghana Diplomat
 SAG,Ghana Staff
 AGD,Ghana UN Diplomat
+
 AH,Madagascar
 CAH,Madagascar Consul
 DAH,Madagascar Diplomat
 SAH,Madagascar Staff
 AHD,Madagascar UN Diplomat
+
 AJ,Panama
 CAJ,Panama Consul
 DAJ,Panama Diplomat
 SAJ,Panama Staff
 AJD,Panama UN Diplomat
+
 AK,Cabo Verde
 CAK,Cabo Verde Consul
 DAK,Cabo Verde Diplomat
 SAK,Cabo Verde Staff
 AKD,Cabo Verde UN Diplomat
+
 AL,Algeria
 CAL,Algeria Consul
 DAL,Algeria Diplomat
 SAL,Algeria Staff
 ALD,Algeria UN Diplomat
+
 AM,Mali
 CAM,Mali Consul
 DAM,Mali Diplomat
 SAM,Mali Staff
 AMD,Mali UN Diplomat
+
 AN,Niger
 CAN,Niger Consul
 DAN,Niger Diplomat
 SAN,Niger Staff
 AND,Niger UN Diplomat
+
 AQ,Syria
 CAQ,Syria Consul
 DAQ,Syria Diplomat
 SAQ,Syria Staff
 AQD,Syria UN Diplomat
+
 AR,Morocco
 CAR,Morocco Consul
 DAR,Morocco Diplomat
 SAR,Morocco Staff
 ARD,Morocco UN Diplomat
+
 AS,Tunisia
 CAS,Tunisia Consul
 DAS,Tunisia Diplomat
 SAS,Tunisia Staff
 ASD,Tunisia UN Diplomat
+
 AT,Nigeria
 CAT,Nigeria Consul
 DAT,Nigeria Diplomat
 SAT,Nigeria Staff
 ATD,Nigeria UN Diplomat
+
 AU,Uganda
 CAU,Uganda Consul
 DAU,Uganda Diplomat
 SAU,Uganda Staff
 AUD,Uganda UN Diplomat
+
 AV,Israel
 CAV,Israel Consul
 DAV,Israel Diplomat
 SAV,Israel Staff
 AVD,Israel UN Diplomat
+
 AW,Ethiopia
 CAW,Ethiopia Consul
 DAW,Ethiopia Diplomat
 SAW,Ethiopia Staff
 AWD,Ethiopia UN Diplomat
+
 AX,Marshall Islands
 CAX,Marshall Islands Consul
 DAX,Marshall Islands Diplomat
 SAX,Marshall Islands Staff
 AXD,Marshall Islands UN Diplomat
+
 AY,Kenya
 CAY,Kenya Consul
 DAY,Kenya Diplomat
 SAY,Kenya Staff
 AYD,Kenya UN Diplomat
+
 AZ,Tanzania
 CAZ,Tanzania Consul
 DAZ,Tanzania Diplomat
 SAZ,Tanzania Staff
 AZD,Tanzania UN Diplomat
+
 BA,Gabon
 CBA,Gabon Consul
 DBA,Gabon Diplomat
 SBA,Gabon Staff
 BAD,Gabon UN Diplomat
+
 BB,Cameroon
 CBB,Cameroon Consul
 DBB,Cameroon Diplomat
 SBB,Cameroon Staff
 BBD,Cameroon UN Diplomat
+
 BC,Central African Republic
 CBC,Central African Republic Consul
 DBC,Central African Republic Diplomat
 SBC,Central African Republic Staff
 BCD,Central African Republic UN Diplomat
+
 BD,Chad
 CBD,Chad Consul
 DBD,Chad Diplomat
 SBD,Chad Staff
 BDD,Chad UN Diplomat
+
 BE,Rwanda
 CBE,Rwanda Consul
 DBE,Rwanda Diplomat
 SBE,Rwanda Staff
 BED,Rwanda UN Diplomat
+
 BF,Burundi
 CBF,Burundi Consul
 DBF,Burundi Diplomat
 SBF,Burundi Staff
 BFD,Burundi UN Diplomat
+
 BG,Democratic Republic of the Congo
 CBG,DR Congo Consul
 DBG,DR Congo Diplomat
 SBG,DR Congo Staff
 BGD,DR Congo UN Diplomat
+
 BH,Egypt
 CBH,Egypt Consul
 DBH,Egypt Diplomat
 SBH,Egypt Staff
 BHD,Egypt UN Diplomat
+
 BJ,South Africa
 CBJ,South Africa Consul
 DBJ,South Africa Diplomat
 SBJ,South Africa Staff
 BJD,South Africa UN Diplomat
+
 BK,Zimbabwe
 CBK,Zimbabwe Consul
 DBK,Zimbabwe Diplomat
 SBK,Zimbabwe Staff
 BKD,Zimbabwe UN Diplomat
+
 BL,Zambia
 CBL,Zambia Consul
 DBL,Zambia Diplomat
 SBL,Zambia Staff
 BLD,Zambia UN Diplomat
+
 BM,Botswana
 CBM,Botswana Consul
 DBM,Botswana Diplomat
 SBM,Botswana Staff
 BMD,Botswana UN Diplomat
+
 BN,Namibia
 CBN,Namibia Consul
 DBN,Namibia Diplomat
 SBN,Namibia Staff
 BND,Namibia UN Diplomat
+
 BO,Angola
 CBO,Angola Consul
 DBO,Angola Diplomat
 SBO,Angola Staff
 BOD,Angola UN Diplomat
+
 BP,Mozambique
 CBP,Mozambique Consul
 DBP,Mozambique Diplomat
 SBP,Mozambique Staff
 BPD,Mozambique UN Diplomat
+
 BQ,Lesotho
 CBQ,Lesotho Consul
 DBQ,Lesotho Diplomat
 SBQ,Lesotho Staff
 BQD,Lesotho UN Diplomat
+
 BR,Eswatini
 CBR,Eswatini Consul
 DBR,Eswatini Diplomat
 SBR,Eswatini Staff
 BRD,Eswatini UN Diplomat
+
 DJ,France
 CDJ,France Consul
 DDJ,France Diplomat
 SDJ,France Staff
 DJD,France UN Diplomat
+
 DL,India
 CDL,India Consul
 DDL,India Diplomat
 SDL,India Staff
 DLD,India UN Diplomat
+
 FT,Qatar
 CFT,Qatar Consul
 DFT,Qatar Diplomat
 SFT,Qatar Staff
 FTD,Qatar UN Diplomat
+
 PD,United Kingdom
 CPD,United Kingdom Consul
 DPD,United Kingdom Diplomat
 SPD,United Kingdom Staff
 PDD,United Kingdom UN Diplomat
+
 TG,Canada
 CTG,Canada Consul
 DTG,Canada Diplomat
 STG,Canada Staff
 TGD,Canada UN Diplomat
+
 TR,Italy
 CTR,Italy Consul
 DTR,Italy Diplomat
 STR,Italy Staff
 TRD,Italy UN Diplomat
+
 WB,United Arab Emirates
 CWB,UAE Consul
 DWB,UAE Diplomat
@@ -586,6 +644,9 @@ WBD,UAE UN Diplomat
       "Staff": `<strong>Staff</strong><br>Supports embassy or mission operations such as administration, logistics, and protocol.`,
       "UN Diplomat": `<strong>UN Diplomat</strong><br>Represents a country in multilateral diplomacy at the United Nations.`
     };
+
+    const resultStack = document.getElementById("result-stack");
+    const unknownBox = document.getElementById("unknown-box");
 
     function extractCode(s) {
       const m = s.match(/^[A-Z]+/);
@@ -639,6 +700,18 @@ WBD,UAE UN Diplomat
       }
 
       return res.json();
+    }
+
+    async function logUnknownCode(plateCode) {
+      try {
+        await fetch("/unknown", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ plateCode })
+        });
+      } catch (e) {
+        console.warn("Unknown code logging failed", e);
+      }
     }
 
     async function loadTopCountries() {
@@ -743,7 +816,6 @@ WBD,UAE UN Diplomat
       let capitalText = "";
       let regionText = "";
       let funFactText = "";
-      let moreText = "";
 
       if (countryData) {
         const pop = countryData.population?.toLocaleString?.() || "—";
@@ -760,14 +832,13 @@ WBD,UAE UN Diplomat
       }
 
       if (wikiExtract) {
-        const parts = wikiExtract.split(/\. +/);
-        const first = parts[0] ? (parts[0].endsWith(".") ? parts[0] : parts[0] + ".") : "";
-        const rest = parts.slice(1).join(". ");
-        funFactText = first ? `<div><strong>Fun Fact:</strong> ${first}</div>` : "";
-        moreText = rest ? `<div>${rest}${rest.endsWith(".") ? "" : "."}</div>` : "";
+        const firstSentence = wikiExtract.split(/(?<=[.!?])\s+/)[0] || "";
+        funFactText = firstSentence
+          ? `<div><strong>Fun Fact:</strong> ${firstSentence}</div>`
+          : "";
       }
 
-      factsEl.innerHTML = popText + langText + capitalText + regionText + funFactText + moreText;
+      factsEl.innerHTML = popText + langText + capitalText + regionText + funFactText;
 
       renderCountryLinks(countryName);
       await loadTopCountries();
@@ -775,41 +846,58 @@ WBD,UAE UN Diplomat
     }
 
     document.getElementById("go").addEventListener("click", async () => {
-      document.getElementById("flag").style.display = "none";
-      document.getElementById("flag").src = "";
-      document.getElementById("result").textContent = "";
-      document.getElementById("count").textContent = "";
+      const resultEl = document.getElementById("result");
+      const roleDefEl = document.getElementById("role-def");
+      const flagEl = document.getElementById("flag");
+
+      unknownBox.classList.remove("show");
+      unknownBox.innerHTML = "";
+
+      resultStack.classList.remove("show");
+      flagEl.style.display = "none";
+      flagEl.src = "";
+      resultEl.textContent = "";
+      document.getElementById("count").innerHTML = "";
       document.getElementById("facts").innerHTML = "";
-      document.getElementById("role-def").innerHTML = "";
-      document.getElementById("country-links").innerHTML = `<li><span class="muted">Run a lookup to load country links.</span></li>`;
+      roleDefEl.innerHTML = "";
+      document.getElementById("country-links").innerHTML = `<li><span>Run a lookup to load country links.</span></li>`;
 
       const raw = document.getElementById("plate").value.trim().toUpperCase();
       const code = extractCode(raw);
 
       if (!code) {
-        document.getElementById("result").textContent = "Please enter at least one letter.";
+        unknownBox.innerHTML = `Please enter at least one letter.`;
+        unknownBox.classList.add("show");
         return;
       }
 
       const desc = mapping[code];
       if (!desc) {
-        document.getElementById("result").textContent = "Unknown code";
+        await logUnknownCode(raw);
+        unknownBox.innerHTML = `
+          <strong>Code not found.</strong><br>
+          This plate code is not in the current database yet. Diplomatic and mission-related
+          plate assignments can change over time, and new codes may be issued. Your lookup
+          has been logged for review.
+        `;
+        unknownBox.classList.add("show");
         return;
       }
 
       const { country, role } = splitDesc(desc);
 
-      document.getElementById("result").textContent = role
+      resultEl.textContent = role
         ? `${country} (${role})`
         : country;
 
       if (role && roleDefs[role]) {
-        document.getElementById("role-def").innerHTML = `
-          <h2>Mission Role</h2>
+        roleDefEl.innerHTML = `
+          <h2 class="section-title">Mission Role</h2>
           <p>${roleDefs[role]}</p>
         `;
       }
 
+      resultStack.classList.add("show");
       await lookupExtras(country, raw);
     });
 
