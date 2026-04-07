@@ -368,7 +368,7 @@ WBD,United Arab Emirates UN Diplomat
     }
 
     async function trackLookup(countryName, plateCode) {
-      const res = await fetch("/api/track", {
+      const res = await fetch("/track", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -388,7 +388,7 @@ WBD,United Arab Emirates UN Diplomat
       const list = document.getElementById("top-countries-list");
 
       try {
-        const res = await fetch("/api/stats");
+        const res = await fetch("/stats");
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
         const data = await res.json();
