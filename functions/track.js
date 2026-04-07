@@ -13,6 +13,13 @@ export async function onRequestPost(context) {
 
     const country = (body.country || "").trim();
     const plateCode = (body.plateCode || "").trim().toUpperCase();
+    const missionRole = (body.missionRole || "").trim();
+
+    const city = (body.city || "").trim();
+    const state = (body.state || "").trim();
+    const vehicleMake = (body.vehicleMake || "").trim();
+    const vehicleModel = (body.vehicleModel || "").trim();
+    const vehicleColor = (body.vehicleColor || "").trim();
 
     if (!country) {
       return new Response(JSON.stringify({ ok: false, error: "Missing country" }), {
@@ -35,6 +42,7 @@ export async function onRequestPost(context) {
       "";
 
     const hashedIp = ip ? await sha256Hex(ip) : null;
+    const isFullPlate = /\d/.test(plateCode);
 
     await env.DB.prepare(`
       INSERT INTO country_queries (country, query_count, updated_at)
@@ -47,12 +55,61 @@ export async function onRequestPost(context) {
       .bind(country)
       .run();
 
+    let plateCount = null;
+
+    if (isFullPlate) {
+      await env.DB.prepare(`
+        INSERT INTO plate_queries (plate_code, country, query_count, updated_at)
+        VALUES (?, ?, 1, CURRENT_TIMESTAMP)
+        ON CONFLICT(plate_code)
+        DO UPDATE SET
+          query_count = query_count + 1,
+          country = excluded.country,
+          updated_at = CURRENT_TIMESTAMP
+      `)
+        .bind(plateCode, country)
+        .run();
+
+      const plateRow = await env.DB.prepare(`
+        SELECT query_count
+        FROM plate_queries
+        WHERE plate_code = ?
+      `)
+        .bind(plateCode)
+        .first();
+
+      plateCount = plateRow?.query_count ?? null;
+    }
+
     await env.DB.prepare(`
       INSERT INTO query_events (country, plate_code, ip_country, hashed_ip, user_agent)
       VALUES (?, ?, ?, ?, ?)
     `)
       .bind(country, plateCode || null, ipCountry, hashedIp, userAgent)
       .run();
+
+    if (isFullPlate && (city || state || vehicleMake || vehicleModel || vehicleColor)) {
+      await env.DB.prepare(`
+        INSERT INTO vehicle_observations (
+          country, plate_code, city, state, vehicle_make, vehicle_model, vehicle_color,
+          ip_country, hashed_ip, user_agent
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `)
+        .bind(
+          country,
+          plateCode,
+          city || null,
+          state || null,
+          vehicleMake || null,
+          vehicleModel || null,
+          vehicleColor || null,
+          ipCountry,
+          hashedIp,
+          userAgent
+        )
+        .run();
+    }
 
     const row = await env.DB.prepare(`
       SELECT country, query_count
@@ -65,7 +122,9 @@ export async function onRequestPost(context) {
     return new Response(JSON.stringify({
       ok: true,
       country: row.country,
-      count: row.query_count
+      count: row.query_count,
+      plateCount,
+      missionRole
     }), {
       headers: { "Content-Type": "application/json" }
     });
