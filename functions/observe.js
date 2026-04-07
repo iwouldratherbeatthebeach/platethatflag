@@ -1,3 +1,5 @@
+import { getUserFromRequest } from "./_lib/auth.js";
+
 async function sha256Hex(value) {
   const data = new TextEncoder().encode(value);
   const digest = await crypto.subtle.digest("SHA-256", data);
@@ -26,6 +28,8 @@ export async function onRequestPost(context) {
       });
     }
 
+    const user = await getUserFromRequest(env, request);
+
     const ip =
       request.headers.get("CF-Connecting-IP") ||
       request.headers.get("x-forwarded-for") ||
@@ -44,9 +48,9 @@ export async function onRequestPost(context) {
     await env.DB.prepare(`
       INSERT INTO vehicle_observations (
         country, plate_code, city, state, vehicle_make, vehicle_model, vehicle_color,
-        ip_country, hashed_ip, user_agent
+        ip_country, hashed_ip, user_agent, user_id, anonymous
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
       .bind(
         country,
@@ -58,7 +62,9 @@ export async function onRequestPost(context) {
         vehicleColor || null,
         ipCountry,
         hashedIp,
-        userAgent
+        userAgent,
+        user?.id || null,
+        user ? 0 : 1
       )
       .run();
 
