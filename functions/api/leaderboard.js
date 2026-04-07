@@ -7,7 +7,7 @@ export async function onRequestGet(context) {
       FROM query_events
       GROUP BY country
       ORDER BY searches DESC
-      LIMIT 20
+      LIMIT 10
     `).all();
 
     const topVehicles = await env.DB.prepare(`
@@ -18,17 +18,17 @@ export async function onRequestGet(context) {
       FROM vehicle_observations
       GROUP BY vehicle_make, vehicle_model
       ORDER BY observations DESC
-      LIMIT 20
+      LIMIT 10
     `).all();
 
-    const topSubmitters = await env.DB.prepare(`
-      SELECT users.username, COUNT(*) AS submissions
-      FROM vehicle_observations
-      JOIN users ON vehicle_observations.user_id = users.id
-      GROUP BY users.username
-      ORDER BY submissions DESC
-      LIMIT 20
-    `).all();
+const topSubmitters = await env.DB.prepare(`
+  SELECT users.username, COUNT(*) AS submissions
+  FROM query_events
+  JOIN users ON query_events.user_id = users.id
+  GROUP BY users.username
+  ORDER BY submissions DESC
+  LIMIT 10
+`).all();
 
     return new Response(JSON.stringify({
       ok: true,
