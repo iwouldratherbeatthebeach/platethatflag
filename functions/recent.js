@@ -3,11 +3,14 @@ export async function onRequestGet(context) {
     const { env } = context;
 
     const result = await env.DB.prepare(`
-      SELECT country, MAX(queried_at) AS queried_at
+      SELECT
+        query_events.country,
+        query_events.queried_at,
+        COALESCE(users.username, 'Anonymous') AS searched_by
       FROM query_events
-      GROUP BY country
-      ORDER BY queried_at DESC
-      LIMIT 5
+      LEFT JOIN users ON query_events.user_id = users.id
+      ORDER BY query_events.queried_at DESC
+      LIMIT 10
     `).all();
 
     return new Response(JSON.stringify({
