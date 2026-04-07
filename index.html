@@ -29,7 +29,9 @@
       --radius: 18px;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
@@ -47,11 +49,19 @@
       padding: 24px 16px 40px;
     }
 
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
     .nav {
       display: flex;
-      justify-content: flex-end;
       gap: 16px;
-      margin-bottom: 10px;
+      flex-wrap: wrap;
     }
 
     .nav a,
@@ -59,6 +69,41 @@
     footer a {
       color: var(--accent);
       text-decoration: none;
+    }
+
+    .auth-bar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .auth-bar input,
+    .auth-bar button {
+      min-height: 40px;
+      border-radius: 12px;
+      border: 0;
+      font-size: 0.95rem;
+    }
+
+    .auth-bar input {
+      background: #fff;
+      color: #111827;
+      padding: 0 12px;
+      min-width: 130px;
+    }
+
+    .auth-bar button {
+      padding: 0 14px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .auth-note {
+      color: var(--muted);
+      font-size: 0.95rem;
     }
 
     .hero {
@@ -123,14 +168,16 @@
       border: 0;
     }
 
-    input {
+    .lookup-row input,
+    .vehicle-grid input {
       width: 100%;
       padding: 0 16px;
       background: #fff;
       color: #111827;
     }
 
-    button {
+    .lookup-row button,
+    .vehicle-submit {
       padding: 0 22px;
       background: linear-gradient(135deg, var(--accent), var(--accent-2));
       color: white;
@@ -196,19 +243,36 @@
       margin-top: 10px;
     }
 
-    .unknown-box {
+    .unknown-box,
+    .inline-message {
       display: none;
       margin-top: 18px;
       padding: 16px 18px;
       border-radius: 16px;
-      background: var(--warn-bg);
-      border: 1px solid var(--warn-border);
-      color: var(--warn-text);
       line-height: 1.6;
     }
 
-    .unknown-box.show {
+    .unknown-box.show,
+    .inline-message.show {
       display: block;
+    }
+
+    .unknown-box {
+      background: var(--warn-bg);
+      border: 1px solid var(--warn-border);
+      color: var(--warn-text);
+    }
+
+    .inline-message.good {
+      background: var(--good-bg);
+      border: 1px solid var(--good-border);
+      color: var(--good);
+    }
+
+    .inline-message.bad {
+      background: var(--warn-bg);
+      border: 1px solid var(--warn-border);
+      color: var(--warn-text);
     }
 
     .vehicle-card {
@@ -224,15 +288,15 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
+      margin-top: 10px;
     }
 
     .vehicle-status {
       margin-top: 12px;
+      display: none;
       padding: 12px 14px;
       border-radius: 12px;
-      color: var(--muted);
       line-height: 1.5;
-      display: none;
     }
 
     .vehicle-status.show {
@@ -275,6 +339,12 @@
       border-bottom: 0;
     }
 
+    .recent-meta {
+      color: var(--subtle);
+      font-size: 0.92rem;
+      margin-top: 2px;
+    }
+
     footer {
       margin-top: 26px;
       text-align: center;
@@ -290,6 +360,11 @@
       .sidebar-sticky {
         position: static;
       }
+
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
     }
 
     @media (max-width: 640px) {
@@ -298,7 +373,8 @@
         grid-template-columns: 1fr;
       }
 
-      button {
+      .lookup-row button,
+      .vehicle-submit {
         width: 100%;
       }
 
@@ -309,14 +385,27 @@
       .card {
         padding: 14px;
       }
+
+      .auth-bar {
+        width: 100%;
+      }
+
+      .auth-bar input {
+        min-width: 0;
+        width: 100%;
+      }
     }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="nav">
-      <a href="/">Home</a>
-      <a href="/about.html">About</a>
+    <div class="topbar">
+      <div class="nav">
+        <a href="/">Home</a>
+        <a href="/about.html">About</a>
+        <a href="/leaderboard.html">Leaderboard</a>
+      </div>
+      <div id="auth-status" class="auth-bar"></div>
     </div>
 
     <div class="hero">
@@ -336,9 +425,10 @@
 
           <div class="lookup-row">
             <input id="plate" placeholder="Type plate code..." />
-            <button id="go">Lookup</button>
+            <button id="go" type="button">Lookup</button>
           </div>
 
+          <div id="lookup-message" class="inline-message"></div>
           <div id="unknown-box" class="unknown-box"></div>
 
           <div id="result-stack" class="result-stack">
@@ -379,7 +469,7 @@
             </div>
 
             <div style="margin-top:12px;">
-              <button id="save-observation" type="button">Save Observation</button>
+              <button id="save-observation" class="vehicle-submit" type="button">Save Observation</button>
             </div>
 
             <div id="vehicle-status" class="vehicle-status"></div>
@@ -425,6 +515,7 @@
 
     const resultStack = document.getElementById("result-stack");
     const unknownBox = document.getElementById("unknown-box");
+    const lookupMessage = document.getElementById("lookup-message");
     const plateInput = document.getElementById("plate");
     const vehicleCard = document.getElementById("vehicle-card");
     const vehicleStatus = document.getElementById("vehicle-status");
@@ -511,6 +602,26 @@
       `;
     }
 
+    function setLookupMessage(message, type) {
+      lookupMessage.textContent = message;
+      lookupMessage.className = `inline-message show ${type}`;
+    }
+
+    function clearLookupMessage() {
+      lookupMessage.textContent = "";
+      lookupMessage.className = "inline-message";
+    }
+
+    function setVehicleStatus(message, type) {
+      vehicleStatus.textContent = message;
+      vehicleStatus.className = `vehicle-status show ${type}`;
+    }
+
+    function clearVehicleStatus() {
+      vehicleStatus.textContent = "";
+      vehicleStatus.className = "vehicle-status";
+    }
+
     async function trackLookup(countryName, plateCode, missionRole) {
       const res = await fetch("/track", {
         method: "POST",
@@ -554,16 +665,6 @@
       } catch (e) {
         setVehicleStatus("Could not save observation right now.", "bad");
       }
-    }
-
-    function setVehicleStatus(message, type) {
-      vehicleStatus.textContent = message;
-      vehicleStatus.className = `vehicle-status show ${type}`;
-    }
-
-    function resetVehicleStatus() {
-      vehicleStatus.textContent = "";
-      vehicleStatus.className = "vehicle-status";
     }
 
     async function logUnknownCode(plateCode) {
@@ -620,10 +721,106 @@
         }
 
         list.innerHTML = rows.map((row) => `
-          <li><div>${row.country}</div></li>
+          <li>
+            <div>
+              <div>${row.country}</div>
+              <div class="recent-meta">by ${row.searched_by}</div>
+            </div>
+          </li>
         `).join("");
       } catch (e) {
         list.innerHTML = `<li><span>Could not load recent searches.</span></li>`;
+      }
+    }
+
+    async function loadMe() {
+      const authEl = document.getElementById("auth-status");
+
+      try {
+        const res = await fetch("/me");
+        const data = await res.json();
+
+        if (data.loggedIn) {
+          authEl.innerHTML = `
+            <span class="auth-note">Signed in as <strong>${data.username}</strong></span>
+            <button id="logout-btn" type="button">Logout</button>
+          `;
+          document.getElementById("logout-btn").addEventListener("click", logout);
+        } else {
+          authEl.innerHTML = `
+            <input id="login-username" placeholder="Username" />
+            <input id="login-password" type="password" placeholder="Password" />
+            <button id="login-btn" type="button">Login</button>
+            <button id="signup-btn" type="button">Sign Up</button>
+          `;
+          document.getElementById("login-btn").addEventListener("click", login);
+          document.getElementById("signup-btn").addEventListener("click", signup);
+        }
+      } catch (e) {
+        authEl.innerHTML = `<span class="auth-note">Could not load login status.</span>`;
+      }
+    }
+
+    async function login() {
+      const username = document.getElementById("login-username").value.trim();
+      const password = document.getElementById("login-password").value;
+
+      try {
+        const res = await fetch("/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          setLookupMessage(data.error || "Login failed.", "bad");
+          return;
+        }
+
+        setLookupMessage(`Signed in as ${data.username}.`, "good");
+        await loadMe();
+        await loadRecentSearches();
+      } catch (e) {
+        setLookupMessage("Could not log in right now.", "bad");
+      }
+    }
+
+    async function signup() {
+      const username = document.getElementById("login-username").value.trim();
+      const password = document.getElementById("login-password").value;
+
+      try {
+        const res = await fetch("/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          setLookupMessage(data.error || "Sign up failed.", "bad");
+          return;
+        }
+
+        setLookupMessage(`Account created. Signed in as ${data.username}.`, "good");
+        await loadMe();
+        await loadRecentSearches();
+      } catch (e) {
+        setLookupMessage("Could not sign up right now.", "bad");
+      }
+    }
+
+    async function logout() {
+      try {
+        await fetch("/logout", { method: "POST" });
+        setLookupMessage("Signed out.", "good");
+        await loadMe();
+        await loadRecentSearches();
+      } catch (e) {
+        setLookupMessage("Could not log out right now.", "bad");
       }
     }
 
@@ -655,6 +852,10 @@
 
         if (track.plateCount !== null && track.plateCount !== undefined) {
           lines.push(`<div><strong>Exact plate lookups:</strong> ${track.plateCount}</div>`);
+        }
+
+        if (track.searchedBy) {
+          lines.push(`<div><strong>Searched by:</strong> ${track.searchedBy}</div>`);
         }
 
         countEl.innerHTML = lines.join("");
@@ -709,12 +910,13 @@
       const roleDefEl = document.getElementById("role-def");
       const flagEl = document.getElementById("flag");
 
+      clearLookupMessage();
       unknownBox.classList.remove("show");
       unknownBox.innerHTML = "";
 
       resultStack.classList.remove("show");
       vehicleCard.classList.remove("show");
-      resetVehicleStatus();
+      clearVehicleStatus();
       lastLookupCountry = null;
       lastLookupPlate = null;
 
@@ -792,10 +994,12 @@
         await loadPlateData();
       } catch (e) {
         console.error("Failed to load plates.csv", e);
+        setLookupMessage("Could not load plate data.", "bad");
       }
 
       loadTopCountries();
       loadRecentSearches();
+      loadMe();
     }
 
     init();
