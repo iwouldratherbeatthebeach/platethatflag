@@ -6,6 +6,7 @@
   <title>Flag That Plate</title>
   <link rel="icon" type="image/png" href="/icon.png" />
   <link rel="apple-touch-icon" href="/icon.png" />
+
   <style>
     :root {
       --bg-1: #020617;
@@ -21,10 +22,15 @@
       --warn-bg: rgba(245, 158, 11, 0.12);
       --warn-border: rgba(245, 158, 11, 0.28);
       --warn-text: #fde68a;
+      --good: #86efac;
+      --good-bg: rgba(34, 197, 94, 0.12);
+      --good-border: rgba(34, 197, 94, 0.24);
       --shadow: 0 18px 42px rgba(0,0,0,0.35);
       --radius: 18px;
     }
+
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       font-family: Inter, system-ui, Arial, sans-serif;
@@ -34,32 +40,40 @@
         linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
       min-height: 100vh;
     }
+
     .wrap {
       width: min(100%, 1120px);
       margin: 0 auto;
       padding: 24px 16px 40px;
     }
+
     .nav {
       display: flex;
       justify-content: flex-end;
       gap: 16px;
       margin-bottom: 10px;
     }
-    .nav a, footer a, .link-list a {
+
+    .nav a,
+    .link-list a,
+    footer a {
       color: var(--accent);
       text-decoration: none;
     }
+
     .hero {
       text-align: center;
       padding: 10px 8px 8px;
       margin-bottom: 18px;
     }
+
     .hero h1 {
       margin: 0 0 12px;
       font-size: clamp(2.3rem, 4.8vw, 3.8rem);
       line-height: 1.02;
       letter-spacing: -0.02em;
     }
+
     .hero p {
       margin: 0 auto;
       max-width: 720px;
@@ -67,12 +81,14 @@
       font-size: 1.04rem;
       line-height: 1.6;
     }
+
     .layout {
       display: grid;
       grid-template-columns: 1.5fr 0.85fr;
       gap: 20px;
       align-items: start;
     }
+
     .card {
       background: var(--panel);
       border: 1px solid var(--border);
@@ -81,37 +97,39 @@
       backdrop-filter: blur(10px);
       padding: 18px;
     }
-    .sidebar-sticky { position: sticky; top: 16px; }
+
+    .sidebar-sticky {
+      position: sticky;
+      top: 16px;
+    }
+
     .lookup-help {
       color: var(--muted);
       margin-bottom: 14px;
       line-height: 1.55;
     }
+
     .lookup-row {
       display: grid;
       grid-template-columns: 1fr auto;
       gap: 12px;
       align-items: center;
     }
-    .vehicle-grid {
-      display: none;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 14px;
-    }
-    .vehicle-grid.show { display: grid; }
+
     input, button {
       font-size: 1rem;
       min-height: 56px;
       border-radius: 14px;
       border: 0;
     }
+
     input {
       width: 100%;
       padding: 0 16px;
       background: #fff;
       color: #111827;
     }
+
     button {
       padding: 0 22px;
       background: linear-gradient(135deg, var(--accent), var(--accent-2));
@@ -120,49 +138,64 @@
       cursor: pointer;
       white-space: nowrap;
     }
+
     .section-title {
       margin: 0 0 10px;
       font-size: 1.08rem;
       color: var(--text);
     }
+
     .result-stack {
       display: none;
       gap: 14px;
       margin-top: 18px;
     }
-    .result-stack.show { display: grid; }
+
+    .result-stack.show {
+      display: grid;
+    }
+
     .box {
       background: var(--panel-2);
       border: 1px solid var(--border);
       border-radius: 16px;
       padding: 16px;
     }
+
     #result {
       font-size: 1.35rem;
       font-weight: 800;
       margin-bottom: 14px;
     }
+
     .flag-wrap {
       display: flex;
       justify-content: center;
       align-items: center;
     }
+
     #flag {
       display: none;
       width: min(260px, 100%);
       border-radius: 12px;
       box-shadow: 0 8px 18px rgba(0,0,0,0.28);
     }
+
     #count, #facts, #role-def {
       color: var(--muted);
       line-height: 1.65;
     }
+
     #count {
       margin-bottom: 18px;
       padding-bottom: 14px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
     }
-    #facts > div { margin-top: 10px; }
+
+    #facts > div {
+      margin-top: 10px;
+    }
+
     .unknown-box {
       display: none;
       margin-top: 18px;
@@ -173,39 +206,109 @@
       color: var(--warn-text);
       line-height: 1.6;
     }
-    .unknown-box.show { display: block; }
-    .top-list, .recent-list, .link-list {
+
+    .unknown-box.show {
+      display: block;
+    }
+
+    .vehicle-card {
+      display: none;
+      margin-top: 14px;
+    }
+
+    .vehicle-card.show {
+      display: block;
+    }
+
+    .vehicle-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .vehicle-status {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+      display: none;
+    }
+
+    .vehicle-status.show {
+      display: block;
+    }
+
+    .vehicle-status.good {
+      background: var(--good-bg);
+      border: 1px solid var(--good-border);
+      color: var(--good);
+    }
+
+    .vehicle-status.bad {
+      background: var(--warn-bg);
+      border: 1px solid var(--warn-border);
+      color: var(--warn-text);
+    }
+
+    .top-list,
+    .recent-list,
+    .link-list {
       list-style: none;
       margin: 0;
       padding: 0;
     }
-    .top-list li, .recent-list li, .link-list li {
+
+    .top-list li,
+    .recent-list li,
+    .link-list li {
       display: flex;
       justify-content: space-between;
       gap: 12px;
       padding: 12px 0;
       border-bottom: 1px solid var(--border);
     }
-    .top-list li:last-child, .recent-list li:last-child, .link-list li:last-child { border-bottom: 0; }
-    .recent-meta {
-      color: var(--subtle);
-      font-size: 0.92rem;
+
+    .top-list li:last-child,
+    .recent-list li:last-child,
+    .link-list li:last-child {
+      border-bottom: 0;
     }
+
     footer {
       margin-top: 26px;
       text-align: center;
       color: var(--muted);
       font-size: 0.95rem;
     }
+
     @media (max-width: 980px) {
-      .layout { grid-template-columns: 1fr; }
-      .sidebar-sticky { position: static; }
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar-sticky {
+        position: static;
+      }
     }
+
     @media (max-width: 640px) {
-      .lookup-row, .vehicle-grid { grid-template-columns: 1fr; }
-      button { width: 100%; }
-      .wrap { padding: 16px 12px 28px; }
-      .card { padding: 14px; }
+      .lookup-row,
+      .vehicle-grid {
+        grid-template-columns: 1fr;
+      }
+
+      button {
+        width: 100%;
+      }
+
+      .wrap {
+        padding: 16px 12px 28px;
+      }
+
+      .card {
+        padding: 14px;
+      }
     }
   </style>
 </head>
@@ -236,14 +339,6 @@
             <button id="go">Lookup</button>
           </div>
 
-          <div id="vehicle-grid" class="vehicle-grid">
-            <input id="obs-city" placeholder="City (optional)" />
-            <input id="obs-state" placeholder="State (optional)" />
-            <input id="obs-make" placeholder="Vehicle make (optional)" />
-            <input id="obs-model" placeholder="Vehicle model (optional)" />
-            <input id="obs-color" placeholder="Vehicle color (optional)" />
-          </div>
-
           <div id="unknown-box" class="unknown-box"></div>
 
           <div id="result-stack" class="result-stack">
@@ -267,6 +362,27 @@
                 <li><span>Run a lookup to load country links.</span></li>
               </ul>
             </div>
+          </div>
+
+          <div id="vehicle-card" class="box vehicle-card">
+            <h2 class="section-title">Add Vehicle Observation</h2>
+            <p class="lookup-help" style="margin-top:0;">
+              Optional: add vehicle details for this full plate.
+            </p>
+
+            <div class="vehicle-grid">
+              <input id="obs-city" placeholder="City (optional)" />
+              <input id="obs-state" placeholder="State (optional)" />
+              <input id="obs-make" placeholder="Vehicle make (optional)" />
+              <input id="obs-model" placeholder="Vehicle model (optional)" />
+              <input id="obs-color" placeholder="Vehicle color (optional)" />
+            </div>
+
+            <div style="margin-top:12px;">
+              <button id="save-observation" type="button">Save Observation</button>
+            </div>
+
+            <div id="vehicle-status" class="vehicle-status"></div>
           </div>
         </div>
       </div>
@@ -297,6 +413,8 @@
   <script>
     let mapping = {};
     let exampleCodes = [];
+    let lastLookupCountry = null;
+    let lastLookupPlate = null;
 
     const roleDefs = {
       "Consul": `<strong>Consul</strong><br>Helps citizens abroad with passports, visas, legal paperwork, and emergencies.`,
@@ -307,8 +425,9 @@
 
     const resultStack = document.getElementById("result-stack");
     const unknownBox = document.getElementById("unknown-box");
-    const vehicleGrid = document.getElementById("vehicle-grid");
     const plateInput = document.getElementById("plate");
+    const vehicleCard = document.getElementById("vehicle-card");
+    const vehicleStatus = document.getElementById("vehicle-status");
 
     async function loadPlateData() {
       const res = await fetch("/plates.csv");
@@ -325,7 +444,9 @@
           const parts = line.split(",");
           const code = parts.shift();
           const desc = parts.join(",").trim();
-          if (code) map[code.trim().toUpperCase()] = desc;
+          if (code) {
+            map[code.trim().toUpperCase()] = desc;
+          }
         });
 
       mapping = map;
@@ -364,10 +485,6 @@
       return /\d/.test(value);
     }
 
-    function updateVehicleVisibility() {
-      vehicleGrid.classList.toggle("show", isFullPlate(plateInput.value.trim().toUpperCase()));
-    }
-
     function slugifyForWiki(country) {
       return country.replace(/\s+/g, "_");
     }
@@ -394,20 +511,59 @@
       `;
     }
 
-    async function trackLookup(countryName, plateCode, missionRole, vehicleInfo) {
+    async function trackLookup(countryName, plateCode, missionRole) {
       const res = await fetch("/track", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           country: countryName,
           plateCode,
-          missionRole,
-          ...vehicleInfo
+          missionRole
         })
       });
 
       if (!res.ok) throw new Error(`Track lookup failed: HTTP ${res.status}`);
       return res.json();
+    }
+
+    async function saveObservation() {
+      if (!lastLookupCountry || !lastLookupPlate) {
+        setVehicleStatus("No full plate lookup is active yet.", "bad");
+        return;
+      }
+
+      const payload = {
+        country: lastLookupCountry,
+        plateCode: lastLookupPlate,
+        city: document.getElementById("obs-city").value.trim(),
+        state: document.getElementById("obs-state").value.trim(),
+        vehicleMake: document.getElementById("obs-make").value.trim(),
+        vehicleModel: document.getElementById("obs-model").value.trim(),
+        vehicleColor: document.getElementById("obs-color").value.trim()
+      };
+
+      try {
+        const res = await fetch("/observe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        setVehicleStatus("Observation saved.", "good");
+      } catch (e) {
+        setVehicleStatus("Could not save observation right now.", "bad");
+      }
+    }
+
+    function setVehicleStatus(message, type) {
+      vehicleStatus.textContent = message;
+      vehicleStatus.className = `vehicle-status show ${type}`;
+    }
+
+    function resetVehicleStatus() {
+      vehicleStatus.textContent = "";
+      vehicleStatus.className = "vehicle-status";
     }
 
     async function logUnknownCode(plateCode) {
@@ -464,19 +620,14 @@
         }
 
         list.innerHTML = rows.map((row) => `
-          <li>
-            <div>
-              <div>${row.country}</div>
-              <div class="recent-meta">${row.plate_code || ""} • ${new Date(row.queried_at).toLocaleString()}</div>
-            </div>
-          </li>
+          <li><div>${row.country}</div></li>
         `).join("");
       } catch (e) {
         list.innerHTML = `<li><span>Could not load recent searches.</span></li>`;
       }
     }
 
-    async function lookupExtras(countryName, plateCode, missionRole, vehicleInfo) {
+    async function lookupExtras(countryName, plateCode, missionRole) {
       const flagEl = document.getElementById("flag");
       const countEl = document.getElementById("count");
       const factsEl = document.getElementById("facts");
@@ -497,13 +648,15 @@
       }
 
       try {
-        const track = await trackLookup(countryName, plateCode, missionRole, vehicleInfo);
+        const track = await trackLookup(countryName, plateCode, missionRole);
         const lines = [
           `<div><strong>Country lookups:</strong> ${track.count}</div>`
         ];
-        if (track.plateCount !== null) {
+
+        if (track.plateCount !== null && track.plateCount !== undefined) {
           lines.push(`<div><strong>Exact plate lookups:</strong> ${track.plateCount}</div>`);
         }
+
         countEl.innerHTML = lines.join("");
       } catch (e) {
         countEl.innerHTML = `<strong>Lookup Count:</strong> Could not update lookup count right now.`;
@@ -560,6 +713,11 @@
       unknownBox.innerHTML = "";
 
       resultStack.classList.remove("show");
+      vehicleCard.classList.remove("show");
+      resetVehicleStatus();
+      lastLookupCountry = null;
+      lastLookupPlate = null;
+
       flagEl.style.display = "none";
       flagEl.src = "";
       resultEl.textContent = "";
@@ -598,14 +756,6 @@
 
       const { country, role } = splitDesc(desc);
 
-      const vehicleInfo = {
-        city: document.getElementById("obs-city").value.trim(),
-        state: document.getElementById("obs-state").value.trim(),
-        vehicleMake: document.getElementById("obs-make").value.trim(),
-        vehicleModel: document.getElementById("obs-model").value.trim(),
-        vehicleColor: document.getElementById("obs-color").value.trim()
-      };
-
       resultEl.textContent = role ? `${country} (${role})` : country;
 
       if (role && roleDefs[role]) {
@@ -613,14 +763,26 @@
           <h2 class="section-title">Mission Role</h2>
           <p>${roleDefs[role]}</p>
         `;
+      } else {
+        roleDefEl.innerHTML = `
+          <h2 class="section-title">Mission Role</h2>
+          <p>No role description is available for this plate type.</p>
+        `;
       }
 
       resultStack.classList.add("show");
-      await lookupExtras(country, raw, role, vehicleInfo);
+      await lookupExtras(country, raw, role);
+
+      if (isFullPlate(raw)) {
+        lastLookupCountry = country;
+        lastLookupPlate = raw;
+        vehicleCard.classList.add("show");
+      }
     }
 
-    plateInput.addEventListener("input", updateVehicleVisibility);
     document.getElementById("go").addEventListener("click", runLookup);
+    document.getElementById("save-observation").addEventListener("click", saveObservation);
+
     plateInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter") runLookup();
     });
@@ -631,7 +793,7 @@
       } catch (e) {
         console.error("Failed to load plates.csv", e);
       }
-      updateVehicleVisibility();
+
       loadTopCountries();
       loadRecentSearches();
     }
