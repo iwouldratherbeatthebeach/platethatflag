@@ -64,44 +64,19 @@
 
     .nav a,
     .link-list a,
-    footer a {
+    footer a,
+    .auth-note a {
       color: var(--accent);
       text-decoration: none;
-    }
-
-    .auth-bar {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .auth-bar input,
-    .auth-bar button {
-      min-height: 40px;
-      border-radius: 12px;
-      border: 0;
-      font-size: 0.95rem;
-    }
-
-    .auth-bar input {
-      background: #fff;
-      color: #111827;
-      padding: 0 12px;
-      min-width: 130px;
-    }
-
-    .auth-bar button {
-      padding: 0 14px;
-      background: linear-gradient(135deg, var(--accent), var(--accent-2));
-      color: white;
-      font-weight: 700;
-      cursor: pointer;
     }
 
     .auth-note {
       color: var(--muted);
       font-size: 0.95rem;
+    }
+
+    .auth-note strong {
+      color: var(--text);
     }
 
     .hero {
@@ -383,15 +358,6 @@
       .card {
         padding: 14px;
       }
-
-      .auth-bar {
-        width: 100%;
-      }
-
-      .auth-bar input {
-        min-width: 0;
-        width: 100%;
-      }
     }
   </style>
 </head>
@@ -400,10 +366,11 @@
     <div class="topbar">
       <div class="nav">
         <a href="/">Home</a>
+        <a href="/login.html">Login</a>
         <a href="/about.html">About</a>
         <a href="/leaderboard.html">Leaderboard</a>
       </div>
-      <div id="auth-status" class="auth-bar"></div>
+      <div id="auth-status" class="auth-note"></div>
     </div>
 
     <div class="hero">
@@ -738,74 +705,18 @@
 
         if (data.loggedIn) {
           authEl.innerHTML = `
-            <span class="auth-note">Signed in as <strong>${data.username}</strong></span>
-            <button id="logout-btn" type="button">Logout</button>
+            Signed in as <strong>${data.username}</strong>
+            · <a href="#" id="logout-link">Logout</a>
           `;
-          document.getElementById("logout-btn").addEventListener("click", logout);
+          document.getElementById("logout-link").addEventListener("click", async (e) => {
+            e.preventDefault();
+            await logout();
+          });
         } else {
-          authEl.innerHTML = `
-            <input id="login-username" placeholder="Username" />
-            <input id="login-password" type="password" placeholder="Password" />
-            <button id="login-btn" type="button">Login</button>
-            <button id="signup-btn" type="button">Sign Up</button>
-          `;
-          document.getElementById("login-btn").addEventListener("click", login);
-          document.getElementById("signup-btn").addEventListener("click", signup);
+          authEl.innerHTML = `Not signed in · <a href="/login.html">Login</a>`;
         }
       } catch (e) {
-        authEl.innerHTML = `<span class="auth-note">Could not load login status.</span>`;
-      }
-    }
-
-    async function login() {
-      const username = document.getElementById("login-username").value.trim();
-      const password = document.getElementById("login-password").value;
-
-      try {
-        const res = await fetch("/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, password })
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          setLookupMessage(data.error || "Login failed.", "bad");
-          return;
-        }
-
-        setLookupMessage(`Signed in as ${data.username}.`, "good");
-        await loadMe();
-        await loadRecentSearches();
-      } catch (e) {
-        setLookupMessage("Could not log in right now.", "bad");
-      }
-    }
-
-    async function signup() {
-      const username = document.getElementById("login-username").value.trim();
-      const password = document.getElementById("login-password").value;
-
-      try {
-        const res = await fetch("/signup", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, password })
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          setLookupMessage(data.error || "Sign up failed.", "bad");
-          return;
-        }
-
-        setLookupMessage(`Account created. Signed in as ${data.username}.`, "good");
-        await loadMe();
-        await loadRecentSearches();
-      } catch (e) {
-        setLookupMessage("Could not sign up right now.", "bad");
+        authEl.textContent = "Could not load login status.";
       }
     }
 
