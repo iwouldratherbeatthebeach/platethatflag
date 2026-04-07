@@ -16,7 +16,9 @@
       --accent: #38bdf8;
       --radius: 18px;
     }
+
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       font-family: Inter, system-ui, Arial, sans-serif;
@@ -26,41 +28,47 @@
         linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
       min-height: 100vh;
     }
+
     .wrap {
       width: min(100%, 900px);
       margin: 0 auto;
       padding: 28px 16px 40px;
     }
+
     .nav {
       display: flex;
-      gap: 14px;
+      gap: 16px;
       margin-bottom: 18px;
+      flex-wrap: wrap;
     }
-    .nav a {
+
+    .nav a, a {
       color: var(--accent);
       text-decoration: none;
-      font-weight: 600;
     }
+
     .card {
       background: var(--panel);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 22px;
     }
+
     h1 {
       margin-top: 0;
       font-size: clamp(2rem, 4vw, 3rem);
     }
-    p, li {
+
+    p {
       color: var(--muted);
       line-height: 1.7;
     }
+
     footer {
       margin-top: 20px;
       color: var(--muted);
       font-size: 0.95rem;
     }
-    a { color: var(--accent); }
   </style>
 </head>
 <body>
@@ -68,6 +76,7 @@
     <div class="nav">
       <a href="/">Home</a>
       <a href="/about.html">About</a>
+      <a href="/leaderboard.html">Leaderboard</a>
     </div>
 
     <div class="card">
@@ -79,13 +88,13 @@
       </p>
       <p>
         The site logs lookup activity to improve the plate database over time. Unknown codes
-        may be reviewed and added as new plate assignments are created or observed.
+        may be reviewed and added as new plate assignments are observed.
       </p>
       <p>
         Contact: <a href="mailto:flagthatplate@gmail.com">flagthatplate@gmail.com</a>
       </p>
       <p>
-        Unless otherwise noted, the site content is shared under the
+        Unless otherwise noted, site content is shared under the
         <strong>Creative Commons Attribution 4.0 International</strong> license.
       </p>
     </div>
