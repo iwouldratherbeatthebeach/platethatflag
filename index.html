@@ -29,9 +29,7 @@
       --radius: 18px;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -411,7 +409,7 @@
     <div class="hero">
       <h1>Flag That Plate</h1>
       <p>
-        Enter a diplomatic plate to identify the country and mission role,
+        Enter a diplomatic plate code to identify the country and mission role,
         view the flag, explore quick facts, and see how often each country has been searched.
       </p>
     </div>
@@ -535,9 +533,7 @@
           const parts = line.split(",");
           const code = parts.shift();
           const desc = parts.join(",").trim();
-          if (code) {
-            map[code.trim().toUpperCase()] = desc;
-          }
+          if (code) map[code.trim().toUpperCase()] = desc;
         });
 
       mapping = map;
