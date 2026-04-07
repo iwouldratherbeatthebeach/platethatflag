@@ -1,3 +1,5 @@
+import { getUserFromRequest } from "./_lib/auth.js";
+
 async function sha256Hex(value) {
   const data = new TextEncoder().encode(value);
   const digest = await crypto.subtle.digest("SHA-256", data);
@@ -15,18 +17,14 @@ export async function onRequestPost(context) {
     const plateCode = (body.plateCode || "").trim().toUpperCase();
     const missionRole = (body.missionRole || "").trim();
 
-    const city = (body.city || "").trim();
-    const state = (body.state || "").trim();
-    const vehicleMake = (body.vehicleMake || "").trim();
-    const vehicleModel = (body.vehicleModel || "").trim();
-    const vehicleColor = (body.vehicleColor || "").trim();
-
     if (!country) {
       return new Response(JSON.stringify({ ok: false, error: "Missing country" }), {
         status: 400,
         headers: { "Content-Type": "application/json" }
       });
     }
+
+    const user = await getUserFromRequest(env, request);
 
     const ip =
       request.headers.get("CF-Connecting-IP") ||
@@ -82,34 +80,21 @@ export async function onRequestPost(context) {
     }
 
     await env.DB.prepare(`
-      INSERT INTO query_events (country, plate_code, ip_country, hashed_ip, user_agent)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO query_events (
+        country, plate_code, ip_country, hashed_ip, user_agent, user_id, anonymous
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `)
-      .bind(country, plateCode || null, ipCountry, hashedIp, userAgent)
+      .bind(
+        country,
+        plateCode || null,
+        ipCountry,
+        hashedIp,
+        userAgent,
+        user?.id || null,
+        user ? 0 : 1
+      )
       .run();
-
-    if (isFullPlate && (city || state || vehicleMake || vehicleModel || vehicleColor)) {
-      await env.DB.prepare(`
-        INSERT INTO vehicle_observations (
-          country, plate_code, city, state, vehicle_make, vehicle_model, vehicle_color,
-          ip_country, hashed_ip, user_agent
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `)
-        .bind(
-          country,
-          plateCode,
-          city || null,
-          state || null,
-          vehicleMake || null,
-          vehicleModel || null,
-          vehicleColor || null,
-          ipCountry,
-          hashedIp,
-          userAgent
-        )
-        .run();
-    }
 
     const row = await env.DB.prepare(`
       SELECT country, query_count
@@ -124,7 +109,8 @@ export async function onRequestPost(context) {
       country: row.country,
       count: row.query_count,
       plateCount,
-      missionRole
+      missionRole,
+      searchedBy: user?.username || "Anonymous"
     }), {
       headers: { "Content-Type": "application/json" }
     });
