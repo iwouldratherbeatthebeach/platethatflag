@@ -1,12 +1,14 @@
 {
+  "$schema": "node_modules/wrangler/config-schema.json",
   "name": "platethatflag",
   "compatibility_date": "2026-04-07",
-  "pages_build_output_dir": ".",
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "platethatflag-db",
-      "database_id": "REPLACE_ME_LATER"
-    }
+  "observability": {
+    "enabled": true
+  },
+  "assets": {
+    "directory": "."
+  },
+  "compatibility_flags": [
+    "nodejs_compat"
   ]
 }
