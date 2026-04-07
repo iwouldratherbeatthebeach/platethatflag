@@ -6,14 +6,14 @@ export async function onRequestGet(context) {
       SELECT country, query_count, updated_at
       FROM country_queries
       ORDER BY query_count DESC, country ASC
-      LIMIT 10
+      LIMIT 5
     `).all();
 
     const topPlates = await env.DB.prepare(`
       SELECT plate_code, country, query_count, updated_at
       FROM plate_queries
       ORDER BY query_count DESC, plate_code ASC
-      LIMIT 10
+      LIMIT 5
     `).all();
 
     return new Response(JSON.stringify({
