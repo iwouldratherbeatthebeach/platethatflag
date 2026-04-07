@@ -10,7 +10,7 @@ export async function onRequestGet(context) {
       FROM query_events
       LEFT JOIN users ON query_events.user_id = users.id
       ORDER BY query_events.queried_at DESC
-      LIMIT 10
+      LIMIT 5
     `).all();
 
     return new Response(JSON.stringify({
