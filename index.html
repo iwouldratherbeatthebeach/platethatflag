@@ -543,8 +543,8 @@ function extractPlateCandidateFromText(text) {
   const upper = String(text || "").toUpperCase();
 
   const patterns = [
-    /\b([A-Z]{3})[\s\-]*([0-9]{4})\b/g,   // DBB 0789
-    /\b([0-9]{4})[\s\-]*([A-Z]{3})\b/g    // 0789 DBB
+    /\b([A-Z]{3})[\s\-]*([0-9]{4})\b/g,
+    /\b([0-9]{4})[\s\-]*([A-Z]{3})\b/g
   ];
 
   for (const pattern of patterns) {
@@ -555,7 +555,7 @@ function extractPlateCandidateFromText(text) {
     }
   }
 
-  return normalizePlateInput(text);
+  return "";
 }
 
 function extractCode(value) {
@@ -574,19 +574,6 @@ function extractCode(value) {
   }
 
   return null;
-}
-
-  const knownCodes = Object.keys(mapping).sort((a, b) => b.length - a.length);
-
-  for (const code of knownCodes) {
-    if (cleaned.startsWith(code)) return code;
-  }
-
-  for (const code of knownCodes) {
-    if (cleaned.endsWith(code)) return code;
-  }
-
-  return knownCodes.find(code => cleaned.includes(code)) || null;
 }
 
 function splitDesc(desc) {
