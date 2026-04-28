@@ -911,22 +911,24 @@ async function scanPlateImage(file) {
 
   setOcrStatus("Scanning image...");
 
+  let worker = null;
   try {
+    // ---- Step 1: Canvas preprocessing ----
     const bitmap = await createImageBitmap(file);
     const W = bitmap.width;
     const H = bitmap.height;
 
-    // ---- Step 1: Crop to main character band (skip header/footer strips) ----
-    const canvas = document.createElement("canvas");
+    // Crop to main character band — skip header text ("DIPLOMAT") and bottom fine print
     const cropTop    = Math.round(H * 0.22);
     const cropBottom = Math.round(H * 0.72);
     const cropLeft   = Math.round(W * 0.03);
     const cropRight  = Math.round(W * 0.97);
-    const cW = cropRight  - cropLeft;
+    const cW = cropRight - cropLeft;
     const cH = cropBottom - cropTop;
 
-    // ---- Step 2: Scale up 4x — Tesseract accuracy degrades on small glyphs ----
+    // Scale up 4x — Tesseract accuracy degrades on small glyphs
     const SCALE = 4;
+    const canvas = document.createElement("canvas");
     canvas.width  = cW * SCALE;
     canvas.height = cH * SCALE;
     const ctx = canvas.getContext("2d");
@@ -934,62 +936,59 @@ async function scanPlateImage(file) {
     ctx.imageSmoothingQuality = "high";
     ctx.drawImage(bitmap, cropLeft, cropTop, cW, cH, 0, 0, canvas.width, canvas.height);
 
-    // ---- Step 3: Grayscale + Otsu-style threshold ----
-    // Convert to grayscale, compute mean, threshold at 85% of mean
-    // This produces clean B&W regardless of plate color
+    // Grayscale + Otsu-style threshold: compute mean luminance, threshold at 85% of mean
+    // Produces clean B&W regardless of plate background color
     const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const d = imgData.data;
     let sum = 0;
     for (let i = 0; i < d.length; i += 4) {
-      sum += 0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2];
+      sum += 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
     }
-    const mean = sum / (d.length / 4);
-    const thresh = mean * 0.85;
-
+    const thresh = (sum / (d.length / 4)) * 0.85;
     for (let i = 0; i < d.length; i += 4) {
-      const lum = 0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2];
+      const lum = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
       const bw  = lum > thresh ? 255 : 0;
-      d[i] = d[i+1] = d[i+2] = bw;
-      d[i+3] = 255;
+      d[i] = d[i + 1] = d[i + 2] = bw;
+      d[i + 3] = 255;
     }
     ctx.putImageData(imgData, 0, 0);
 
     const blob = await new Promise(res => canvas.toBlob(res, "image/png"));
 
-    // ---- Step 4: OCR strategy ----
-    // PSM 8  = single word  — best for "DXY0001" style plates
-    // PSM 13 = raw line     — fallback; both ALWAYS return conf=0, so never gate on confidence
-    // PSM 7  = single line  — final fallback with confidence available
-    const cfg8  = { logger: () => {}, tessedit_pageseg_mode: 8,  tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" };
-    const cfg13 = { logger: () => {}, tessedit_pageseg_mode: 13, tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" };
-    const cfg7  = { logger: () => {}, tessedit_pageseg_mode: 7,  tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" };
+    // ---- Step 2: Tesseract.js v5 worker API ----
+    // Must use createWorker + setParameters — passing config inline to recognize() is unreliable in v5
+    worker = await Tesseract.createWorker("eng");
 
-    // Run PSM 8 first — most reliable for single-plate reads
-    let result = await Tesseract.recognize(blob, "eng", cfg8);
-    let raw    = (result?.data?.text || "").trim();
+    // PSM 8 = single word — best for plate format; always reports conf=0 even on perfect reads
+    await worker.setParameters({
+      tessedit_pageseg_mode: "8",
+      tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    });
 
-    // PSM 8/13 report confidence 0 even on perfect reads — use text presence, not confidence
+    let result = await worker.recognize(blob);
+    let raw    = (result?.data?.text || "").trim().replace(/\s+/g, "");
+
+    // Fallback: PSM 13 (raw line) if PSM 8 returned nothing
     if (!raw) {
-      result = await Tesseract.recognize(blob, "eng", cfg13);
-      raw    = (result?.data?.text || "").trim();
+      await worker.setParameters({ tessedit_pageseg_mode: "13" });
+      result = await worker.recognize(blob);
+      raw    = (result?.data?.text || "").trim().replace(/\s+/g, "");
     }
 
-    // Final fallback: PSM 7 with real confidence
-    let confidence = 0;
+    // Fallback: PSM 7 (single line) — last resort
     if (!raw) {
-      result     = await Tesseract.recognize(blob, "eng", cfg7);
-      raw        = (result?.data?.text || "").trim();
-      confidence = result?.data?.confidence || 0;
+      await worker.setParameters({ tessedit_pageseg_mode: "7" });
+      result = await worker.recognize(blob);
+      raw    = (result?.data?.text || "").trim().replace(/\s+/g, "");
     }
-
-    const cleaned = extractPlateCandidateFromText(raw);
-    const rawNorm = normalizePlateInput(raw);
 
     console.log("RAW OCR:", raw);
+
+    const cleaned = extractPlateCandidateFromText(raw);
     console.log("PLATE CANDIDATE:", cleaned);
 
     if (!cleaned) {
-      setOcrStatus(`Could not detect plate. OCR read: "${rawNorm.slice(0, 60)}"`);
+      setOcrStatus(`Could not detect plate. OCR read: "${(raw || "").slice(0, 60)}"`);
       return;
     }
 
@@ -1007,6 +1006,10 @@ async function scanPlateImage(file) {
   } catch (e) {
     console.warn("OCR failed", e);
     setOcrStatus("OCR failed. Check browser console for details.");
+  } finally {
+    if (worker) {
+      try { await worker.terminate(); } catch (_) {}
+    }
   }
 }
 
