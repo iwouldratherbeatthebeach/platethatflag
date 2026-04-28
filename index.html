@@ -730,7 +730,14 @@ async function saveObservation() {
     });
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    setVehicleStatus("Observation saved.", "good");
+    const res2 = await res.json().catch(() => ({}));
+    const bonus = res2 && res2.bonusReason === "first_spotter" ? " First spotter bonus!" : "";
+    setVehicleStatus(
+      res2 && res2.pointsEarned > 0
+        ? `Observation saved &middot; +${res2.pointsEarned} pts${bonus} &middot; Score: ${res2.newScore}`
+        : "Observation saved.",
+      "good"
+    );
   } catch (e) {
     setVehicleStatus("Could not save observation right now.", "bad");
   }
@@ -851,6 +858,10 @@ async function enrichCountry(country, plateCode, missionRole) {
       lines.push(`<div><strong>Searched by:</strong> ${track.searchedBy}</div>`);
     }
 
+    if (track.pointsEarned > 0) {
+      lines.push(`<div style="color:var(--good);margin-top:6px;">+${track.pointsEarned} pt${track.pointsEarned !== 1 ? 's' : ''} earned &middot; Score: ${track.newScore}</div>`);
+    }
+
     countEl.innerHTML = lines.join("");
   } catch (e) {
     countEl.innerHTML = `<strong>Lookup Count:</strong> Could not update lookup count right now.`;
@@ -901,19 +912,56 @@ async function scanPlateImage(file) {
   setOcrStatus("Scanning image...");
 
   try {
-    const result = await Tesseract.recognize(file, "eng", {
-      logger: () => {}
+    // Pre-process: grayscale + contrast boost via Canvas for better Tesseract accuracy
+    const bitmap = await createImageBitmap(file);
+    const canvas = document.createElement("canvas");
+    canvas.width  = bitmap.width;
+    canvas.height = bitmap.height;
+    const ctx = canvas.getContext("2d");
+
+    ctx.drawImage(bitmap, 0, 0);
+
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const d = imageData.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const lum = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+      const c = Math.min(255, Math.max(0, (lum - 128) * 1.6 + 128));
+      d[i] = d[i + 1] = d[i + 2] = c;
+    }
+    ctx.putImageData(imageData, 0, 0);
+
+    const blob = await new Promise(res => canvas.toBlob(res, "image/png"));
+
+    // PSM 7 = single text line; fallback PSM 8 = single word
+    const tryOcr = (psm) => Tesseract.recognize(blob, "eng", {
+      logger: () => {},
+      tessedit_pageseg_mode: psm,
+      tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
     });
 
-    const raw = result?.data?.text || "";
+    let result     = await tryOcr(7);
+    let raw        = result?.data?.text || "";
+    let confidence = result?.data?.confidence || 0;
+
+    if (confidence < 50 || !raw.trim()) {
+      result     = await tryOcr(8);
+      raw        = result?.data?.text || "";
+      confidence = result?.data?.confidence || 0;
+    }
+
     const cleaned = extractPlateCandidateFromText(raw);
+    const rawNorm = normalizePlateInput(raw);
 
     console.log("RAW OCR:", raw);
-    console.log("CLEANED OCR:", normalizePlateInput(raw));
+    console.log("CONFIDENCE:", confidence);
     console.log("PLATE CANDIDATE:", cleaned);
 
     if (!cleaned) {
-      setOcrStatus(`Could not detect plate text. OCR read: ${normalizePlateInput(raw).slice(0, 80)}`);
+      setOcrStatus(
+        confidence < 20
+          ? `Low confidence scan (${Math.round(confidence)}%). Try a clearer image.`
+          : `Could not detect plate text. OCR read: ${rawNorm.slice(0, 80)}`
+      );
       return;
     }
 
@@ -921,11 +969,11 @@ async function scanPlateImage(file) {
     plateInput.value = cleaned;
 
     if (!code) {
-      setOcrStatus(`Detected plate candidate: ${cleaned}. No matching code found.`);
+      setOcrStatus(`Detected: ${cleaned} (confidence: ${Math.round(confidence)}%). No matching code found.`);
       return;
     }
 
-    setOcrStatus(`Detected plate candidate: ${cleaned}. Matched code: ${code}.`);
+    setOcrStatus(`Detected: ${cleaned} | Matched: ${code} | Confidence: ${Math.round(confidence)}%`);
     await runLookup();
 
   } catch (e) {
