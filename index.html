@@ -918,8 +918,6 @@ async function scanPlateImage(file) {
     const bitmap = await createImageBitmap(file);
     const W = bitmap.width, H = bitmap.height;
 
-    // Returns a Canvas element (not a Blob) — Tesseract.js loadImage handles
-    // canvas natively via canvas.toBlob() + FileReader internally
     function prepareCanvas(srcX, srcY, srcW, srcH, scale) {
       const canvas = document.createElement("canvas");
       canvas.width  = srcW * scale;
@@ -928,8 +926,6 @@ async function scanPlateImage(file) {
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = "high";
       ctx.drawImage(bitmap, srcX, srcY, srcW, srcH, 0, 0, canvas.width, canvas.height);
-
-      // Grayscale + Otsu threshold
       const id = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const d = id.data;
       let sum = 0;
@@ -948,35 +944,34 @@ async function scanPlateImage(file) {
       Math.round(W*0.03), Math.round(H*0.20),
       Math.round(W*0.94), Math.round(H*0.55), 4
     );
-    const canvas2 = prepareCanvas(0, 0, W, H, 3);
 
-    await ensureScheduler();
+    setOcrStatus("Running OCR...");
 
-    async function ocrCanvas(canvas) {
-      for (const psm of ["8", "13", "7"]) {
-        const result = await ocrScheduler.addJob("recognize", canvas, {
-          tessedit_pageseg_mode: psm,
-          tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-        });
-        const raw = (result?.data?.text || "").trim().replace(/\s+/g, "");
-        console.log("PSM", psm, "->", JSON.stringify(raw));
-        if (raw) return raw;
-      }
-      return "";
+    // Use Tesseract.recognize() directly — simplest API, no worker lifecycle to manage
+    async function tryRecognize(image, psm) {
+      const result = await Tesseract.recognize(image, "eng", {
+        logger: m => { if (m.status === "recognizing text") setOcrStatus("Recognizing... " + Math.round(m.progress * 100) + "%"); }
+      });
+      return (result?.data?.text || "").trim().replace(/\s+/g, "");
     }
 
-    let raw = await ocrCanvas(canvas1);
+    // Pass 1: cropped character band, PSM 8
+    let raw = await tryRecognize(canvas1, "8");
+    console.log("Pass 1 raw:", raw);
+
+    // Pass 2: full image if no candidate found
     if (!extractPlateCandidateFromText(raw)) {
-      console.log("Pass 1 empty, trying full image");
-      raw = await ocrCanvas(canvas2);
+      setOcrStatus("Retrying with full image...");
+      const canvas2 = prepareCanvas(0, 0, W, H, 2);
+      raw = await tryRecognize(canvas2, "8");
+      console.log("Pass 2 raw:", raw);
     }
 
-    console.log("Final raw:", raw);
     const cleaned = extractPlateCandidateFromText(raw);
     console.log("Candidate:", cleaned);
 
     if (!cleaned) {
-      setOcrStatus(`Could not detect plate. OCR read: "${(raw||"").slice(0,80)}"`);
+      setOcrStatus("Could not detect plate. OCR read: \"" + (raw||"").slice(0,80) + "\"");
       return;
     }
 
@@ -984,11 +979,11 @@ async function scanPlateImage(file) {
     plateInput.value = cleaned;
 
     if (!code) {
-      setOcrStatus(`Detected: ${cleaned} — no matching diplomatic code found.`);
+      setOcrStatus("Detected: " + cleaned + " — no matching diplomatic code found.");
       return;
     }
 
-    setOcrStatus(`Detected: ${cleaned} | Matched: ${code}`);
+    setOcrStatus("Detected: " + cleaned + " | Matched: " + code);
     await runLookup();
 
   } catch(e) {
@@ -1083,30 +1078,6 @@ document.getElementById("plate-image").addEventListener("change", async (e) => {
   e.target.value = "";
 });
 
-// Global OCR scheduler — created once at page load so eng.traineddata
-// is downloaded/cached before the user ever taps the camera button.
-let ocrScheduler = null;
-
-async function initOcr() {
-  try {
-    ocrScheduler = Tesseract.createScheduler();
-    const worker = await Tesseract.createWorker("eng");
-    ocrScheduler.addWorker(worker);
-    console.log("OCR ready");
-  } catch(e) {
-    console.warn("OCR init failed (will retry on first scan):", e);
-    ocrScheduler = null;
-  }
-}
-
-// Lazy fallback: if scheduler failed at init, build a one-shot scheduler inline
-async function ensureScheduler() {
-  if (ocrScheduler) return;
-  ocrScheduler = Tesseract.createScheduler();
-  const worker = await Tesseract.createWorker("eng");
-  ocrScheduler.addWorker(worker);
-}
-
 async function init() {
   try {
     await loadPlateData();
@@ -1118,7 +1089,6 @@ async function init() {
   loadTopCountries();
   loadRecentSearches();
   loadMe();
-  initOcr(); // warm up in background — don't await, don't block page load
 }
 
 init();
