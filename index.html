@@ -540,24 +540,49 @@ function normalizePlateInput(value) {
 }
 
 function extractPlateCandidateFromText(text) {
-  const upper = String(text || "").toUpperCase();
+  if (!text) return "";
+
+  const upper = text.toUpperCase();
+
+  const normalizeDigits = s =>
+    s.replace(/O/g, "0")
+     .replace(/Q/g, "0")
+     .replace(/I/g, "1")
+     .replace(/L/g, "1")
+     .replace(/S/g, "5")
+     .replace(/B/g, "8");
 
   const patterns = [
-    /\b([A-Z]{3})[\s\-]*([0-9]{4})\b/g,
-    /\b([0-9]{4})[\s\-]*([A-Z]{3})\b/g
+
+    // 3-letter diplomatic: DBB 0789
+    /\b([A-Z]{3})[\s\-]*([0-9OQILSB]{4})\b/g,
+
+    // 2-letter diplomatic: AG 0150
+    /\b([A-Z]{2})[\s\-]*([0-9OQILSB]{4})\b/g,
+
+    // UN reversed: 1234 ABC
+    /\b([0-9OQILSB]{4})[\s\-]*([A-Z]{3})\b/g,
+
+    // UN reversed short: 1234 AB
+    /\b([0-9OQILSB]{4})[\s\-]*([A-Z]{2})\b/g
   ];
 
   for (const pattern of patterns) {
     const matches = [...upper.matchAll(pattern)];
+
     if (matches.length) {
       const m = matches[0];
-      return `${m[1]}${m[2]}`;
+
+      if (/^[A-Z]/.test(m[1])) {
+        return `${m[1]}${normalizeDigits(m[2])}`;
+      }
+
+      return `${normalizeDigits(m[1])}${m[2]}`;
     }
   }
 
   return "";
 }
-
 function extractCode(value) {
   const cleaned = normalizePlateInput(value);
 
@@ -893,7 +918,10 @@ async function scanPlateImage(file) {
   setOcrStatus("Scanning image...");
 
   try {
-    const result = await Tesseract.recognize(file, "eng", { logger: () => {} });
+    const result = await Tesseract.recognize(file, "eng", {
+  logger: () => {},
+  tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 "
+});
     const raw = result?.data?.text || "";
     const cleaned = extractPlateCandidateFromText(raw);
 
