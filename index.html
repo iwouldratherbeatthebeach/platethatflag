@@ -511,8 +511,6 @@
     </footer>
   </div>
 
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-
 <script>
 let mapping = {};
 let exampleCodes = [];
@@ -915,63 +913,68 @@ async function scanPlateImage(file) {
   setOcrStatus("Scanning image...");
 
   try {
-    const bitmap = await createImageBitmap(file);
-    const W = bitmap.width, H = bitmap.height;
+    // Convert image to base64
+    const base64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(",")[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
 
-    function prepareCanvas(srcX, srcY, srcW, srcH, scale) {
-      const canvas = document.createElement("canvas");
-      canvas.width  = srcW * scale;
-      canvas.height = srcH * scale;
-      const ctx = canvas.getContext("2d");
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = "high";
-      ctx.drawImage(bitmap, srcX, srcY, srcW, srcH, 0, 0, canvas.width, canvas.height);
-      const id = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const d = id.data;
-      let sum = 0;
-      for (let i = 0; i < d.length; i += 4)
-        sum += 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
-      const thresh = (sum / (d.length / 4)) * 0.85;
-      for (let i = 0; i < d.length; i += 4) {
-        const bw = (0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2]) > thresh ? 255 : 0;
-        d[i] = d[i+1] = d[i+2] = bw; d[i+3] = 255;
+    setOcrStatus("Reading plate...");
+
+    const response = await fetch(
+      "https://vision.googleapis.com/v1/images:annotate?key=AIzaSyCQrt4ae0Sa7Fm7DH34i3fF-7DMJvtR8_A",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          requests: [{
+            image: { content: base64 },
+            features: [{ type: "TEXT_DETECTION", maxResults: 1 }]
+          }]
+        })
       }
-      ctx.putImageData(id, 0, 0);
-      return canvas;
-    }
-
-    const canvas1 = prepareCanvas(
-      Math.round(W*0.03), Math.round(H*0.20),
-      Math.round(W*0.94), Math.round(H*0.55), 4
     );
 
-    setOcrStatus("Running OCR...");
-
-    // Use Tesseract.recognize() directly — simplest API, no worker lifecycle to manage
-    async function tryRecognize(image, psm) {
-      const result = await Tesseract.recognize(image, "eng", {
-        logger: m => { if (m.status === "recognizing text") setOcrStatus("Recognizing... " + Math.round(m.progress * 100) + "%"); }
-      });
-      return (result?.data?.text || "").trim().replace(/\s+/g, "");
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err?.error?.message || "Vision API error " + response.status);
     }
 
-    // Pass 1: cropped character band, PSM 8
-    let raw = await tryRecognize(canvas1, "8");
-    console.log("Pass 1 raw:", raw);
+    const data = await response.json();
+    const raw = (data?.responses?.[0]?.fullTextAnnotation?.text || "").trim();
+    console.log("Vision API raw:", raw);
 
-    // Pass 2: full image if no candidate found
-    if (!extractPlateCandidateFromText(raw)) {
-      setOcrStatus("Retrying with full image...");
-      const canvas2 = prepareCanvas(0, 0, W, H, 2);
-      raw = await tryRecognize(canvas2, "8");
-      console.log("Pass 2 raw:", raw);
+    if (!raw) {
+      setOcrStatus("No text detected in image.");
+      return;
     }
 
-    const cleaned = extractPlateCandidateFromText(raw);
+    // Filter to only lines that look like diplomat plate format
+    // US diplomat plates: 3 letters + 4 digits (e.g. DXY0001) or 2 letters + 4 digits
+    const lines = raw.split(/
+/).map(l => l.trim()).filter(Boolean);
+    console.log("Lines:", lines);
+
+    let cleaned = "";
+    for (const line of lines) {
+      const candidate = extractPlateCandidateFromText(line);
+      if (candidate) {
+        cleaned = candidate;
+        break;
+      }
+    }
+
+    // Fallback: try the whole blob joined
+    if (!cleaned) {
+      cleaned = extractPlateCandidateFromText(raw.replace(/\s+/g, ""));
+    }
+
     console.log("Candidate:", cleaned);
 
     if (!cleaned) {
-      setOcrStatus("Could not detect plate. OCR read: \"" + (raw||"").slice(0,80) + "\"");
+      setOcrStatus("Could not detect a plate code. Text found: \"" + raw.slice(0, 80) + "\"");
       return;
     }
 
@@ -988,7 +991,7 @@ async function scanPlateImage(file) {
 
   } catch(e) {
     console.error("OCR error:", e);
-    setOcrStatus("OCR failed: " + (e.message || String(e)));
+    setOcrStatus("Scan failed: " + (e.message || String(e)));
   }
 }
 
