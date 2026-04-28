@@ -549,15 +549,19 @@ function extractPlateCandidateFromText(text) {
      .replace(/Q/g, "0")
      .replace(/I/g, "1")
      .replace(/L/g, "1")
-     .replace(/S/g, "5");
+     .replace(/T/g, "1")
+     .replace(/S/g, "5")
+     .replace(/B/g, "8")
+     .replace(/G/g, "6")
+     .replace(/Z/g, "2");
 
   const cleaned = upper.replace(/[^A-Z0-9]/g, "");
 
   const candidates = [
-    cleaned.match(/([A-Z]{3})([0-9OQILS]{4})/),
-    cleaned.match(/([A-Z]{2})([0-9OQILS]{4})/),
-    cleaned.match(/([0-9OQILS]{4})([A-Z]{3})/),
-    cleaned.match(/([0-9OQILS]{4})([A-Z]{2})/)
+    cleaned.match(/([A-Z]{3})([0-9OQILSTBGZ]{4})/),
+    cleaned.match(/([A-Z]{2})([0-9OQILSTBGZ]{4})/),
+    cleaned.match(/([0-9OQILSTBGZ]{4})([A-Z]{3})/),
+    cleaned.match(/([0-9OQILSTBGZ]{4})([A-Z]{2})/)
   ].filter(Boolean);
 
   if (!candidates.length) return "";
