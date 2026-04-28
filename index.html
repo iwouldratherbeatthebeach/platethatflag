@@ -920,5 +920,544 @@
 
     init();
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+<script>
+  let mapping = {};
+  let exampleCodes = [];
+  let lastLookupCountry = null;
+  let lastLookupPlate = null;
+
+  const roleDefs = {
+    "Consul": `<strong>Consul</strong><br>Helps citizens abroad with passports, visas, legal paperwork, and emergencies.`,
+    "Diplomat": `<strong>Diplomat</strong><br>Represents the home government in formal relations with the host country.`,
+    "Staff": `<strong>Staff</strong><br>Supports embassy or mission operations such as administration, logistics, and protocol.`,
+    "UN Diplomat": `<strong>UN Diplomat</strong><br>Represents a country in multilateral diplomacy at the United Nations.`
+  };
+
+  const resultStack = document.getElementById("result-stack");
+  const unknownBox = document.getElementById("unknown-box");
+  const lookupMessage = document.getElementById("lookup-message");
+  const plateInput = document.getElementById("plate");
+  const vehicleCard = document.getElementById("vehicle-card");
+  const vehicleStatus = document.getElementById("vehicle-status");
+
+  async function loadPlateData() {
+    const res = await fetch("/plates.csv");
+    if (!res.ok) throw new Error(`Could not load plates.csv: HTTP ${res.status}`);
+
+    const csvText = await res.text();
+    const map = {};
+
+    csvText
+      .split(/\r?\n/)
+      .map(line => line.trim())
+      .filter(Boolean)
+      .forEach((line) => {
+        const parts = line.split(",");
+        const code = parts.shift();
+        const desc = parts.join(",").trim();
+
+        if (code) {
+          map[code.trim().toUpperCase()] = desc;
+        }
+      });
+
+    mapping = map;
+    exampleCodes = Object.keys(mapping).filter(Boolean);
+    startExampleRotation();
+  }
+
+  function startExampleRotation() {
+    if (!exampleCodes.length) return;
+
+    const codeEl = document.getElementById("example-code");
+    const plateEl = document.getElementById("example-plate");
+
+    const update = () => {
+      const code = exampleCodes[Math.floor(Math.random() * exampleCodes.length)];
+      codeEl.textContent = code;
+      plateEl.textContent = `${code}0150`;
+    };
+
+    update();
+    setInterval(update, 2500);
+  }
+
+  function normalizePlateInput(value) {
+    return String(value || "")
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, "");
+  }
+
+  function extractCode(value) {
+    const cleaned = normalizePlateInput(value);
+
+    if (!cleaned || !Object.keys(mapping).length) return null;
+
+    // Normal diplomatic format: DBB0789, DFT0150, CAA1234
+    const lettersFirst = cleaned.match(/^([A-Z]{1,4})\d*/);
+    if (lettersFirst && mapping[lettersFirst[1]]) {
+      return lettersFirst[1];
+    }
+
+    // Reversed / UN-style format: 0789DBB, 1234ABC
+    const numbersFirst = cleaned.match(/^\d+([A-Z]{1,4})$/);
+    if (numbersFirst && mapping[numbersFirst[1]]) {
+      return numbersFirst[1];
+    }
+
+    // Fallback: longest matching known code anywhere in the scanned/typed text
+    const knownCodes = Object.keys(mapping).sort((a, b) => b.length - a.length);
+    return knownCodes.find(code => cleaned.includes(code)) || null;
+  }
+
+  function splitDesc(desc) {
+    const m = desc.match(/^(.+?)\s+(UN Diplomat|Consul|Diplomat|Staff)$/);
+    if (m) return { country: m[1], role: m[2] };
+    return { country: desc, role: "" };
+  }
+
+  function isFullPlate(value) {
+    return /\d/.test(normalizePlateInput(value));
+  }
+
+  function slugifyForWiki(country) {
+    return country.replace(/\s+/g, "_");
+  }
+
+  function slugifyForState(country) {
+    return country
+      .toLowerCase()
+      .replace(/\(.*?\)/g, "")
+      .replace(/[^a-z0-9\s-]/g, "")
+      .trim()
+      .replace(/\s+/g, "-");
+  }
+
+  function renderCountryLinks(countryName) {
+    const linksEl = document.getElementById("country-links");
+    const wikiUrl = `https://en.wikipedia.org/wiki/${encodeURIComponent(slugifyForWiki(countryName))}`;
+    const stateUrl = `https://www.state.gov/countries-areas/${encodeURIComponent(slugifyForState(countryName))}/`;
+    const newsUrl = `https://news.google.com/search?q=${encodeURIComponent(countryName)}`;
+
+    linksEl.innerHTML = `
+      <li><a href="${wikiUrl}" target="_blank" rel="noopener noreferrer">Wikipedia</a></li>
+      <li><a href="${stateUrl}" target="_blank" rel="noopener noreferrer">U.S. State Department</a></li>
+      <li><a href="${newsUrl}" target="_blank" rel="noopener noreferrer">Recent News</a></li>
+    `;
+  }
+
+  function setLookupMessage(message, type) {
+    lookupMessage.textContent = message;
+    lookupMessage.className = `inline-message show ${type}`;
+  }
+
+  function clearLookupMessage() {
+    lookupMessage.textContent = "";
+    lookupMessage.className = "inline-message";
+  }
+
+  function setVehicleStatus(message, type) {
+    vehicleStatus.textContent = message;
+    vehicleStatus.className = `vehicle-status show ${type}`;
+  }
+
+  function clearVehicleStatus() {
+    vehicleStatus.textContent = "";
+    vehicleStatus.className = "vehicle-status";
+  }
+
+  function setOcrStatus(message) {
+    const statusEl = document.getElementById("ocr-status");
+    if (statusEl) statusEl.textContent = message;
+  }
+
+  async function trackLookup(countryName, plateCode, missionRole) {
+    const res = await fetch("/track", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        country: countryName,
+        plateCode,
+        missionRole
+      })
+    });
+
+    if (!res.ok) throw new Error(`Track lookup failed: HTTP ${res.status}`);
+    return res.json();
+  }
+
+  async function saveObservation() {
+    if (!lastLookupCountry || !lastLookupPlate) {
+      setVehicleStatus("No full plate lookup is active yet.", "bad");
+      return;
+    }
+
+    const payload = {
+      country: lastLookupCountry,
+      plateCode: lastLookupPlate,
+      city: document.getElementById("obs-city").value.trim(),
+      state: document.getElementById("obs-state").value.trim(),
+      vehicleMake: document.getElementById("obs-make").value.trim(),
+      vehicleModel: document.getElementById("obs-model").value.trim(),
+      vehicleColor: document.getElementById("obs-color").value.trim()
+    };
+
+    try {
+      const res = await fetch("/observe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setVehicleStatus("Observation saved.", "good");
+    } catch (e) {
+      setVehicleStatus("Could not save observation right now.", "bad");
+    }
+  }
+
+  async function logUnknownCode(plateCode) {
+    try {
+      await fetch("/unknown", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plateCode })
+      });
+    } catch (e) {
+      console.warn("Unknown code logging failed", e);
+    }
+  }
+
+  async function scanPlateImage(file) {
+    if (!file) return;
+
+    setOcrStatus("Scanning image for plate text...");
+
+    try {
+      const result = await Tesseract.recognize(file, "eng", {
+        logger: () => {}
+      });
+
+      const scannedText = result?.data?.text || "";
+      const cleaned = normalizePlateInput(scannedText);
+
+      if (!cleaned) {
+        setOcrStatus("Could not find readable plate text in that image.");
+        return;
+      }
+
+      const code = extractCode(cleaned);
+      plateInput.value = cleaned;
+
+      if (!code) {
+        setOcrStatus(`Scanned text: ${cleaned}. No matching code found yet.`);
+        return;
+      }
+
+      setOcrStatus(`Scanned text: ${cleaned}. Detected code: ${code}.`);
+      await runLookup();
+    } catch (e) {
+      console.warn("OCR failed", e);
+      setOcrStatus("Could not scan that image right now.");
+    }
+  }
+
+  async function loadTopCountries() {
+    const list = document.getElementById("top-countries-list");
+
+    try {
+      const res = await fetch("/stats");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const data = await res.json();
+      const rows = data.topCountries || [];
+
+      if (!rows.length) {
+        list.innerHTML = `<li><span>No lookups yet.</span></li>`;
+        return;
+      }
+
+      list.innerHTML = rows.map((row) => `
+        <li>
+          <span>${row.country}</span>
+          <strong>${row.query_count}</strong>
+        </li>
+      `).join("");
+    } catch (e) {
+      list.innerHTML = `<li><span>Could not load stats.</span></li>`;
+    }
+  }
+
+  async function loadRecentSearches() {
+    const list = document.getElementById("recent-searches-list");
+
+    try {
+      const res = await fetch("/recent");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const data = await res.json();
+      const rows = data.recentSearches || [];
+
+      if (!rows.length) {
+        list.innerHTML = `<li><span>No recent searches yet.</span></li>`;
+        return;
+      }
+
+      list.innerHTML = rows.map((row) => `
+        <li>
+          <div>
+            <div>${row.country}</div>
+            <div class="recent-meta">by ${row.searched_by}</div>
+          </div>
+        </li>
+      `).join("");
+    } catch (e) {
+      list.innerHTML = `<li><span>Could not load recent searches.</span></li>`;
+    }
+  }
+
+  async function loadMe() {
+    const authEl = document.getElementById("auth-status");
+
+    try {
+      const res = await fetch("/me");
+      const data = await res.json();
+
+      if (data.loggedIn) {
+        authEl.innerHTML = `
+          Signed in as <strong>${data.username}</strong>
+          · <a href="#" id="logout-link">Logout</a>
+        `;
+        document.getElementById("logout-link").addEventListener("click", async (e) => {
+          e.preventDefault();
+          await logout();
+        });
+      } else {
+        authEl.innerHTML = `Not signed in · <a href="/login.html">Login</a>`;
+      }
+    } catch (e) {
+      authEl.textContent = "Could not load login status.";
+    }
+  }
+
+  async function logout() {
+    try {
+      await fetch("/logout", { method: "POST" });
+      setLookupMessage("Signed out.", "good");
+      await loadMe();
+      await loadRecentSearches();
+    } catch (e) {
+      setLookupMessage("Could not log out right now.", "bad");
+    }
+  }
+
+  async function lookupExtras(countryName, plateCode, missionRole) {
+    const flagEl = document.getElementById("flag");
+    const countEl = document.getElementById("count");
+    const factsEl = document.getElementById("facts");
+
+    let countryData;
+
+    try {
+      const res = await fetch(
+        `https://restcountries.com/v3.1/name/${encodeURIComponent(countryName)}?fullText=true`
+      );
+
+      if (res.ok) {
+        countryData = (await res.json())[0];
+        flagEl.src = countryData.flags.svg || countryData.flags.png;
+        flagEl.alt = `Flag of ${countryName}`;
+        flagEl.style.display = "block";
+      }
+    } catch (e) {
+      console.warn("Country API error", e);
+    }
+
+    try {
+      const track = await trackLookup(countryName, plateCode, missionRole);
+      const lines = [
+        `<div><strong>Country lookups:</strong> ${track.count}</div>`
+      ];
+
+      if (track.plateCount !== null && track.plateCount !== undefined) {
+        lines.push(`<div><strong>Exact plate lookups:</strong> ${track.plateCount}</div>`);
+      }
+
+      if (track.searchedBy) {
+        lines.push(`<div><strong>Searched by:</strong> ${track.searchedBy}</div>`);
+      }
+
+      countEl.innerHTML = lines.join("");
+    } catch (e) {
+      countEl.innerHTML = `<strong>Lookup Count:</strong> Could not update lookup count right now.`;
+    }
+
+    let wikiExtract = "";
+
+    try {
+      const res2 = await fetch(
+        `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(countryName)}`
+      );
+
+      if (res2.ok) {
+        const wiki = await res2.json();
+        wikiExtract = wiki.extract || "";
+      }
+    } catch (e) {
+      console.warn("Wiki API error", e);
+    }
+
+    let popText = "";
+    let langText = "";
+    let capitalText = "";
+    let regionText = "";
+    let summaryText = "";
+
+    if (countryData) {
+      const pop = countryData.population?.toLocaleString?.() || "—";
+      const langs = countryData.languages ? Object.values(countryData.languages).join(", ") : "—";
+      const capital = Array.isArray(countryData.capital) ? countryData.capital.join(", ") : "—";
+      const region = countryData.region || "—";
+
+      popText = `<div><strong>Population:</strong> ${pop}</div>`;
+      langText = `<div><strong>Languages:</strong> ${langs}</div>`;
+      capitalText = `<div><strong>Capital:</strong> ${capital}</div>`;
+      regionText = `<div><strong>Region:</strong> ${region}</div>`;
+    }
+
+    if (wikiExtract) {
+      summaryText = `<div><strong>Summary:</strong> ${wikiExtract}</div>`;
+    }
+
+    factsEl.innerHTML = popText + langText + capitalText + regionText + summaryText;
+
+    renderCountryLinks(countryName);
+    await loadTopCountries();
+    await loadRecentSearches();
+  }
+
+  async function runLookup() {
+    const resultEl = document.getElementById("result");
+    const roleDefEl = document.getElementById("role-def");
+    const flagEl = document.getElementById("flag");
+
+    clearLookupMessage();
+    unknownBox.classList.remove("show");
+    unknownBox.innerHTML = "";
+
+    resultStack.classList.remove("show");
+    vehicleCard.classList.remove("show");
+    clearVehicleStatus();
+
+    lastLookupCountry = null;
+    lastLookupPlate = null;
+
+    flagEl.style.display = "none";
+    flagEl.src = "";
+    resultEl.textContent = "";
+    document.getElementById("count").innerHTML = "";
+    document.getElementById("facts").innerHTML = "";
+    roleDefEl.innerHTML = "";
+    document.getElementById("country-links").innerHTML = `<li><span>Run a lookup to load country links.</span></li>`;
+
+    const raw = normalizePlateInput(plateInput.value);
+    const code = extractCode(raw);
+
+    if (!code) {
+      if (raw) {
+        await logUnknownCode(raw);
+        unknownBox.innerHTML = `
+          <strong>Code not found.</strong><br>
+          This plate code is not in the current database yet. Diplomatic and mission-related
+          plate assignments can change over time, and new codes may be issued. Your lookup
+          has been logged for review.
+        `;
+      } else {
+        unknownBox.innerHTML = `Please enter at least one letter.`;
+      }
+
+      unknownBox.classList.add("show");
+      return;
+    }
+
+    if (!Object.keys(mapping).length) {
+      unknownBox.innerHTML = `Plate data has not loaded yet. Please try again in a moment.`;
+      unknownBox.classList.add("show");
+      return;
+    }
+
+    const desc = mapping[code];
+
+    if (!desc) {
+      await logUnknownCode(raw);
+      unknownBox.innerHTML = `
+        <strong>Code not found.</strong><br>
+        This plate code is not in the current database yet. Diplomatic and mission-related
+        plate assignments can change over time, and new codes may be issued. Your lookup
+        has been logged for review.
+      `;
+      unknownBox.classList.add("show");
+      return;
+    }
+
+    const { country, role } = splitDesc(desc);
+
+    resultEl.textContent = role ? `${country} (${role})` : country;
+
+    if (role && roleDefs[role]) {
+      roleDefEl.innerHTML = `
+        <h2 class="section-title">Mission Role</h2>
+        <p>${roleDefs[role]}</p>
+      `;
+    } else {
+      roleDefEl.innerHTML = `
+        <h2 class="section-title">Mission Role</h2>
+        <p>No role description is available for this plate type.</p>
+      `;
+    }
+
+    resultStack.classList.add("show");
+    await lookupExtras(country, raw, role);
+
+    if (isFullPlate(raw)) {
+      lastLookupCountry = country;
+      lastLookupPlate = raw;
+      vehicleCard.classList.add("show");
+    }
+  }
+
+  document.getElementById("go").addEventListener("click", runLookup);
+  document.getElementById("save-observation").addEventListener("click", saveObservation);
+
+  plateInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") runLookup();
+  });
+
+  const plateImageInput = document.getElementById("plate-image");
+  if (plateImageInput) {
+    plateImageInput.addEventListener("change", async (e) => {
+      const file = e.target.files && e.target.files[0];
+      await scanPlateImage(file);
+      e.target.value = "";
+    });
+  }
+
+  async function init() {
+    try {
+      await loadPlateData();
+    } catch (e) {
+      console.error("Failed to load plates.csv", e);
+      setLookupMessage("Could not load plate data.", "bad");
+    }
+
+    loadTopCountries();
+    loadRecentSearches();
+    loadMe();
+  }
+
+  init();
+</script>
 </body>
 </html>
