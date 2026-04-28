@@ -397,10 +397,17 @@
             Enter a plate like <span id="example-code">DFT</span> or <span id="example-plate">DFT0150</span>.
           </div>
 
-          <div class="lookup-row">
-            <input id="plate" placeholder="Type plate code..." />
-            <button id="go" type="button">Lookup</button>
-          </div>
+<div class="lookup-row">
+  <input id="plate" placeholder="Type plate code or full plate..." />
+  <button id="go" type="button">Lookup</button>
+
+  <label class="upload-button" for="plate-image">
+    Upload Image
+    <input id="plate-image" type="file" accept="image/*" />
+  </label>
+</div>
+
+<div id="ocr-status" class="lookup-help" style="margin-top:12px;"></div>
 
           <div id="lookup-message" class="inline-message"></div>
           <div id="unknown-box" class="unknown-box"></div>
