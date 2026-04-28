@@ -542,43 +542,53 @@ function normalizePlateInput(value) {
 function extractPlateCandidateFromText(text) {
   if (!text) return "";
 
-  const upper = text.toUpperCase();
+  const upper = String(text).toUpperCase();
 
   const normalizeDigits = s =>
     s.replace(/O/g, "0")
      .replace(/Q/g, "0")
      .replace(/I/g, "1")
      .replace(/L/g, "1")
-     .replace(/S/g, "5")
-     .replace(/B/g, "8");
+     .replace(/S/g, "5");
+
+  const compact = upper.replace(/[^A-Z0-9]/g, "");
 
   const patterns = [
-
-    // 3-letter diplomatic: DBB 0789
-    /\b([A-Z]{3})[\s\-]*([0-9OQILSB]{4})\b/g,
-
-    // 2-letter diplomatic: AG 0150
-    /\b([A-Z]{2})[\s\-]*([0-9OQILSB]{4})\b/g,
-
-    // UN reversed: 1234 ABC
-    /\b([0-9OQILSB]{4})[\s\-]*([A-Z]{3})\b/g,
-
-    // UN reversed short: 1234 AB
-    /\b([0-9OQILSB]{4})[\s\-]*([A-Z]{2})\b/g
+    /([A-Z])\s*([A-Z])\s*([A-Z])[\s\-]*([0-9OQILS]{4})/g, // D W D 1675
+    /([A-Z]{3})[\s\-]*([0-9OQILS]{4})/g,                  // DWD 1675
+    /([A-Z]{2})[\s\-]*([0-9OQILS]{4})/g,                  // AG 0150
+    /([0-9OQILS]{4})[\s\-]*([A-Z]{3})/g,                  // 1675 DWD
+    /([0-9OQILS]{4})[\s\-]*([A-Z]{2})/g                   // 0150 AG
   ];
 
   for (const pattern of patterns) {
-    const matches = [...upper.matchAll(pattern)];
+    const m = pattern.exec(upper);
+    if (!m) continue;
 
-    if (matches.length) {
-      const m = matches[0];
-
-      if (/^[A-Z]/.test(m[1])) {
-        return `${m[1]}${normalizeDigits(m[2])}`;
-      }
-
-      return `${normalizeDigits(m[1])}${m[2]}`;
+    // spaced 3-letter format: D W D 1675
+    if (m.length === 5 && /^[A-Z]$/.test(m[1])) {
+      return `${m[1]}${m[2]}${m[3]}${normalizeDigits(m[4])}`;
     }
+
+    // normal letters-first
+    if (/^[A-Z]/.test(m[1])) {
+      return `${m[1]}${normalizeDigits(m[2])}`;
+    }
+
+    // reversed numbers-first
+    return `${normalizeDigits(m[1])}${m[2]}`;
+  }
+
+  // final fallback against compacted OCR text
+  const compactMatch =
+    compact.match(/([A-Z]{2,3})([0-9OQILS]{4})/) ||
+    compact.match(/([0-9OQILS]{4})([A-Z]{2,3})/);
+
+  if (compactMatch) {
+    if (/^[A-Z]/.test(compactMatch[1])) {
+      return `${compactMatch[1]}${normalizeDigits(compactMatch[2])}`;
+    }
+    return `${normalizeDigits(compactMatch[1])}${compactMatch[2]}`;
   }
 
   return "";
