@@ -572,20 +572,16 @@ function extractPlateCandidateFromText(text) {
 }
 function extractCode(value) {
   const cleaned = normalizePlateInput(value);
-
-  if (!cleaned || !Object.keys(mapping).length) return null;
+  const lettersOnly = cleaned.replace(/[0-9]/g, "");
 
   const knownCodes = Object.keys(mapping).sort((a, b) => b.length - a.length);
 
-  for (const code of knownCodes) {
-    if (cleaned.startsWith(code)) return code;
-  }
-
-  for (const code of knownCodes) {
-    if (cleaned.endsWith(code)) return code;
-  }
-
-  return null;
+  return (
+    knownCodes.find(code => cleaned.startsWith(code)) ||
+    knownCodes.find(code => cleaned.endsWith(code)) ||
+    knownCodes.find(code => lettersOnly.includes(code)) ||
+    null
+  );
 }
 
 function splitDesc(desc) {
