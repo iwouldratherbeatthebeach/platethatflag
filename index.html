@@ -913,82 +913,95 @@ async function scanPlateImage(file) {
 
   let worker = null;
   try {
-    // ---- Step 1: Canvas preprocessing ----
-    const bitmap = await createImageBitmap(file);
+
+    // ---- Preprocessing helper ----
+    // Takes an ImageBitmap, optional crop box, and scale factor
+    // Returns a PNG Blob with grayscale + Otsu threshold applied
+    async function prepareBlob(bitmap, crop, scale) {
+      const srcX = crop ? crop.x : 0;
+      const srcY = crop ? crop.y : 0;
+      const srcW = crop ? crop.w : bitmap.width;
+      const srcH = crop ? crop.h : bitmap.height;
+
+      const canvas = document.createElement("canvas");
+      canvas.width  = srcW * scale;
+      canvas.height = srcH * scale;
+      const ctx = canvas.getContext("2d");
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(bitmap, srcX, srcY, srcW, srcH, 0, 0, canvas.width, canvas.height);
+
+      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const d = imgData.data;
+      let sum = 0;
+      for (let i = 0; i < d.length; i += 4) {
+        sum += 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+      }
+      const thresh = (sum / (d.length / 4)) * 0.85;
+      for (let i = 0; i < d.length; i += 4) {
+        const lum = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+        const bw  = lum > thresh ? 255 : 0;
+        d[i] = d[i + 1] = d[i + 2] = bw;
+        d[i + 3] = 255;
+      }
+      ctx.putImageData(imgData, 0, 0);
+      return new Promise(res => canvas.toBlob(res, "image/png"));
+    }
+
+    // ---- OCR helper — tries PSM 8, 13, 7 in order ----
+    async function ocrBlob(worker, blob) {
+      for (const psm of ["8", "13", "7"]) {
+        await worker.setParameters({
+          tessedit_pageseg_mode: psm,
+          tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+        });
+        const result = await worker.recognize(blob);
+        const raw = (result?.data?.text || "").trim().replace(/\s+/g, "");
+        console.log(`PSM ${psm} raw: "${raw}"`);
+        if (raw) return raw;
+      }
+      return "";
+    }
+
+    let bitmap;
+    try {
+      bitmap = await createImageBitmap(file);
+    } catch (e) {
+      // createImageBitmap unsupported (some older mobile browsers) — fall through to URL approach
+      console.warn("createImageBitmap failed:", e);
+      throw new Error("Image could not be decoded: " + e.message);
+    }
+
     const W = bitmap.width;
     const H = bitmap.height;
+    console.log(`Image size: ${W}x${H}`);
 
-    // Crop to main character band — skip header text ("DIPLOMAT") and bottom fine print
-    const cropTop    = Math.round(H * 0.22);
-    const cropBottom = Math.round(H * 0.72);
-    const cropLeft   = Math.round(W * 0.03);
-    const cropRight  = Math.round(W * 0.97);
-    const cW = cropRight - cropLeft;
-    const cH = cropBottom - cropTop;
-
-    // Scale up 4x — Tesseract accuracy degrades on small glyphs
-    const SCALE = 4;
-    const canvas = document.createElement("canvas");
-    canvas.width  = cW * SCALE;
-    canvas.height = cH * SCALE;
-    const ctx = canvas.getContext("2d");
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
-    ctx.drawImage(bitmap, cropLeft, cropTop, cW, cH, 0, 0, canvas.width, canvas.height);
-
-    // Grayscale + Otsu-style threshold: compute mean luminance, threshold at 85% of mean
-    // Produces clean B&W regardless of plate background color
-    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const d = imgData.data;
-    let sum = 0;
-    for (let i = 0; i < d.length; i += 4) {
-      sum += 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-    }
-    const thresh = (sum / (d.length / 4)) * 0.85;
-    for (let i = 0; i < d.length; i += 4) {
-      const lum = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-      const bw  = lum > thresh ? 255 : 0;
-      d[i] = d[i + 1] = d[i + 2] = bw;
-      d[i + 3] = 255;
-    }
-    ctx.putImageData(imgData, 0, 0);
-
-    const blob = await new Promise(res => canvas.toBlob(res, "image/png"));
-
-    // ---- Step 2: Tesseract.js v5 worker API ----
-    // Must use createWorker + setParameters — passing config inline to recognize() is unreliable in v5
     worker = await Tesseract.createWorker("eng");
 
-    // PSM 8 = single word — best for plate format; always reports conf=0 even on perfect reads
-    await worker.setParameters({
-      tessedit_pageseg_mode: "8",
-      tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-    });
+    // ---- Pass 1: cropped to main character band (skips header/footer text) ----
+    const crop = {
+      x: Math.round(W * 0.03),
+      y: Math.round(H * 0.20),
+      w: Math.round(W * 0.94),
+      h: Math.round(H * 0.55)
+    };
+    const blob1 = await prepareBlob(bitmap, crop, 4);
+    let raw = await ocrBlob(worker, blob1);
+    console.log("Pass 1 (cropped) raw:", raw);
 
-    let result = await worker.recognize(blob);
-    let raw    = (result?.data?.text || "").trim().replace(/\s+/g, "");
-
-    // Fallback: PSM 13 (raw line) if PSM 8 returned nothing
-    if (!raw) {
-      await worker.setParameters({ tessedit_pageseg_mode: "13" });
-      result = await worker.recognize(blob);
-      raw    = (result?.data?.text || "").trim().replace(/\s+/g, "");
+    // ---- Pass 2: full image if crop pass returned nothing ----
+    if (!extractPlateCandidateFromText(raw)) {
+      console.log("Pass 1 candidate empty, trying full image...");
+      const blob2 = await prepareBlob(bitmap, null, 3);
+      raw = await ocrBlob(worker, blob2);
+      console.log("Pass 2 (full) raw:", raw);
     }
-
-    // Fallback: PSM 7 (single line) — last resort
-    if (!raw) {
-      await worker.setParameters({ tessedit_pageseg_mode: "7" });
-      result = await worker.recognize(blob);
-      raw    = (result?.data?.text || "").trim().replace(/\s+/g, "");
-    }
-
-    console.log("RAW OCR:", raw);
 
     const cleaned = extractPlateCandidateFromText(raw);
-    console.log("PLATE CANDIDATE:", cleaned);
+    console.log("Final plate candidate:", cleaned);
 
     if (!cleaned) {
-      setOcrStatus(`Could not detect plate. OCR read: "${(raw || "").slice(0, 60)}"`);
+      setOcrStatus(`Could not detect plate. Last OCR read: "${(raw || "none").slice(0, 80)}"`);
       return;
     }
 
@@ -1000,12 +1013,12 @@ async function scanPlateImage(file) {
       return;
     }
 
-    setOcrStatus(`Detected: ${cleaned} | Matched code: ${code}`);
+    setOcrStatus(`Detected: ${cleaned} | Matched: ${code}`);
     await runLookup();
 
   } catch (e) {
-    console.warn("OCR failed", e);
-    setOcrStatus("OCR failed. Check browser console for details.");
+    console.error("OCR error:", e);
+    setOcrStatus(`OCR failed: ${e.message || e}. See console for details.`);
   } finally {
     if (worker) {
       try { await worker.terminate(); } catch (_) {}
