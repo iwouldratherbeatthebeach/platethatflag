@@ -511,6 +511,8 @@
     </footer>
   </div>
 
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
 <script>
 let mapping = {};
 let exampleCodes = [];
@@ -547,19 +549,15 @@ function extractPlateCandidateFromText(text) {
      .replace(/Q/g, "0")
      .replace(/I/g, "1")
      .replace(/L/g, "1")
-     .replace(/T/g, "1")
-     .replace(/S/g, "5")
-     .replace(/B/g, "8")
-     .replace(/G/g, "6")
-     .replace(/Z/g, "2");
+     .replace(/S/g, "5");
 
   const cleaned = upper.replace(/[^A-Z0-9]/g, "");
 
   const candidates = [
-    cleaned.match(/([A-Z]{3})([0-9OQILSTBGZ]{4})/),
-    cleaned.match(/([A-Z]{2})([0-9OQILSTBGZ]{4})/),
-    cleaned.match(/([0-9OQILSTBGZ]{4})([A-Z]{3})/),
-    cleaned.match(/([0-9OQILSTBGZ]{4})([A-Z]{2})/)
+    cleaned.match(/([A-Z]{3})([0-9OQILS]{4})/),
+    cleaned.match(/([A-Z]{2})([0-9OQILS]{4})/),
+    cleaned.match(/([0-9OQILS]{4})([A-Z]{3})/),
+    cleaned.match(/([0-9OQILS]{4})([A-Z]{2})/)
   ].filter(Boolean);
 
   if (!candidates.length) return "";
@@ -732,14 +730,7 @@ async function saveObservation() {
     });
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const res2 = await res.json().catch(() => ({}));
-    const bonus = res2 && res2.bonusReason === "first_spotter" ? " First spotter bonus!" : "";
-    setVehicleStatus(
-      res2 && res2.pointsEarned > 0
-        ? `Observation saved &middot; +${res2.pointsEarned} pts${bonus} &middot; Score: ${res2.newScore}`
-        : "Observation saved.",
-      "good"
-    );
+    setVehicleStatus("Observation saved.", "good");
   } catch (e) {
     setVehicleStatus("Could not save observation right now.", "bad");
   }
@@ -860,10 +851,6 @@ async function enrichCountry(country, plateCode, missionRole) {
       lines.push(`<div><strong>Searched by:</strong> ${track.searchedBy}</div>`);
     }
 
-    if (track.pointsEarned > 0) {
-      lines.push(`<div style="color:var(--good);margin-top:6px;">+${track.pointsEarned} pt${track.pointsEarned !== 1 ? 's' : ''} earned &middot; Score: ${track.newScore}</div>`);
-    }
-
     countEl.innerHTML = lines.join("");
   } catch (e) {
     countEl.innerHTML = `<strong>Lookup Count:</strong> Could not update lookup count right now.`;
@@ -912,61 +899,21 @@ async function scanPlateImage(file) {
   if (!file) return;
 
   setOcrStatus("Scanning image...");
-  console.log("scanPlateImage called, file:", file.name, file.size, file.type);
 
   try {
-    // Convert to base64
-    const base64 = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload  = () => resolve(reader.result.split(",")[1]);
-      reader.onerror = () => reject(new Error("FileReader failed"));
-      reader.readAsDataURL(file);
+    const result = await Tesseract.recognize(file, "eng", {
+      logger: () => {}
     });
 
-    console.log("Base64 length:", base64.length);
-    setOcrStatus("Sending to Vision API...");
+    const raw = result?.data?.text || "";
+    const cleaned = extractPlateCandidateFromText(raw);
 
-    // Call our Cloudflare Function proxy — avoids CORS issues with direct browser calls
-    const response = await fetch("/ocr", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ imageBase64: base64 })
-    });
-
-    const result = await response.json();
-    console.log("OCR result:", result);
-
-    if (!result.ok) {
-      setOcrStatus("Vision API error: " + (result.error || "unknown"));
-      return;
-    }
-
-    const raw = (result.text || "").trim();
-    console.log("Raw text:", raw);
-
-    if (!raw) {
-      setOcrStatus("No text detected in image.");
-      return;
-    }
-
-    // Try each line first, then the whole blob
-    const lines = raw.split(/
-/).map(l => l.trim()).filter(Boolean);
-    console.log("Lines:", lines);
-
-    let cleaned = "";
-    for (const line of lines) {
-      const candidate = extractPlateCandidateFromText(line);
-      if (candidate) { cleaned = candidate; break; }
-    }
-    if (!cleaned) {
-      cleaned = extractPlateCandidateFromText(raw.replace(/\s+/g, ""));
-    }
-
-    console.log("Candidate:", cleaned);
+    console.log("RAW OCR:", raw);
+    console.log("CLEANED OCR:", normalizePlateInput(raw));
+    console.log("PLATE CANDIDATE:", cleaned);
 
     if (!cleaned) {
-      setOcrStatus("No plate pattern found. Text: \"" + raw.slice(0, 80) + "\"");
+      setOcrStatus(`Could not detect plate text. OCR read: ${normalizePlateInput(raw).slice(0, 80)}`);
       return;
     }
 
@@ -974,16 +921,16 @@ async function scanPlateImage(file) {
     plateInput.value = cleaned;
 
     if (!code) {
-      setOcrStatus("Detected: " + cleaned + " — no matching diplomatic code.");
+      setOcrStatus(`Detected plate candidate: ${cleaned}. No matching code found.`);
       return;
     }
 
-    setOcrStatus("Detected: " + cleaned + " | Matched: " + code);
+    setOcrStatus(`Detected plate candidate: ${cleaned}. Matched code: ${code}.`);
     await runLookup();
 
-  } catch(e) {
-    console.error("Scan error:", e);
-    setOcrStatus("Scan failed: " + (e.message || String(e)));
+  } catch (e) {
+    console.warn("OCR failed", e);
+    setOcrStatus("OCR failed. Check browser console for details.");
   }
 }
 
