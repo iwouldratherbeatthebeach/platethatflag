@@ -912,21 +912,14 @@ async function enrichCountry(country, plateCode, missionRole) {
 
 async function scanPlateImage(file) {
   if (!file) return;
-
   setOcrStatus("Scanning image...");
 
-  let worker = null;
   try {
+    // ---- Canvas preprocessing ----
+    const bitmap = await createImageBitmap(file);
+    const W = bitmap.width, H = bitmap.height;
 
-    // ---- Preprocessing helper ----
-    // Takes an ImageBitmap, optional crop box, and scale factor
-    // Returns a PNG Blob with grayscale + Otsu threshold applied
-    async function prepareBlob(bitmap, crop, scale) {
-      const srcX = crop ? crop.x : 0;
-      const srcY = crop ? crop.y : 0;
-      const srcW = crop ? crop.w : bitmap.width;
-      const srcH = crop ? crop.h : bitmap.height;
-
+    async function prepareBlob(srcX, srcY, srcW, srcH, scale) {
       const canvas = document.createElement("canvas");
       canvas.width  = srcW * scale;
       canvas.height = srcH * scale;
@@ -934,78 +927,56 @@ async function scanPlateImage(file) {
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = "high";
       ctx.drawImage(bitmap, srcX, srcY, srcW, srcH, 0, 0, canvas.width, canvas.height);
-
-      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const d = imgData.data;
+      const id = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const d = id.data;
       let sum = 0;
-      for (let i = 0; i < d.length; i += 4) {
-        sum += 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-      }
+      for (let i = 0; i < d.length; i += 4)
+        sum += 0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2];
       const thresh = (sum / (d.length / 4)) * 0.85;
       for (let i = 0; i < d.length; i += 4) {
-        const lum = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-        const bw  = lum > thresh ? 255 : 0;
-        d[i] = d[i + 1] = d[i + 2] = bw;
-        d[i + 3] = 255;
+        const bw = (0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2]) > thresh ? 255 : 0;
+        d[i] = d[i+1] = d[i+2] = bw; d[i+3] = 255;
       }
-      ctx.putImageData(imgData, 0, 0);
-      return new Promise(res => canvas.toBlob(res, "image/png"));
+      ctx.putImageData(id, 0, 0);
+      return new Promise(r => canvas.toBlob(r, "image/png"));
     }
 
-    // ---- OCR helper — tries PSM 8, 13, 7 in order ----
-    async function ocrBlob(worker, blob) {
+    // Pass 1: cropped character band
+    const blob1 = await prepareBlob(
+      Math.round(W*0.03), Math.round(H*0.20),
+      Math.round(W*0.94), Math.round(H*0.55), 4
+    );
+
+    // Pass 2: full image fallback
+    const blob2 = await prepareBlob(0, 0, W, H, 3);
+
+    // ---- OCR using the pre-warmed scheduler ----
+    await ensureScheduler();
+    async function ocrBlob(blob) {
       for (const psm of ["8", "13", "7"]) {
-        await worker.setParameters({
+        const result = await ocrScheduler.addJob("recognize", blob, {
           tessedit_pageseg_mode: psm,
           tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
         });
-        const result = await worker.recognize(blob);
         const raw = (result?.data?.text || "").trim().replace(/\s+/g, "");
-        console.log(`PSM ${psm} raw: "${raw}"`);
+        console.log("PSM", psm, "->", raw);
         if (raw) return raw;
       }
       return "";
     }
 
-    let bitmap;
-    try {
-      bitmap = await createImageBitmap(file);
-    } catch (e) {
-      // createImageBitmap unsupported (some older mobile browsers) — fall through to URL approach
-      console.warn("createImageBitmap failed:", e);
-      throw new Error("Image could not be decoded: " + e.message);
-    }
-
-    const W = bitmap.width;
-    const H = bitmap.height;
-    console.log(`Image size: ${W}x${H}`);
-
-    worker = await Tesseract.createWorker("eng");
-
-    // ---- Pass 1: cropped to main character band (skips header/footer text) ----
-    const crop = {
-      x: Math.round(W * 0.03),
-      y: Math.round(H * 0.20),
-      w: Math.round(W * 0.94),
-      h: Math.round(H * 0.55)
-    };
-    const blob1 = await prepareBlob(bitmap, crop, 4);
-    let raw = await ocrBlob(worker, blob1);
-    console.log("Pass 1 (cropped) raw:", raw);
-
-    // ---- Pass 2: full image if crop pass returned nothing ----
+    let raw = await ocrBlob(blob1);
     if (!extractPlateCandidateFromText(raw)) {
-      console.log("Pass 1 candidate empty, trying full image...");
-      const blob2 = await prepareBlob(bitmap, null, 3);
-      raw = await ocrBlob(worker, blob2);
-      console.log("Pass 2 (full) raw:", raw);
+      console.log("Pass 1 empty, trying full image");
+      raw = await ocrBlob(blob2);
     }
 
+    console.log("Final raw:", raw);
     const cleaned = extractPlateCandidateFromText(raw);
-    console.log("Final plate candidate:", cleaned);
+    console.log("Candidate:", cleaned);
 
     if (!cleaned) {
-      setOcrStatus(`Could not detect plate. Last OCR read: "${(raw || "none").slice(0, 80)}"`);
+      setOcrStatus(`Could not detect plate. OCR read: "${(raw||"").slice(0,80)}"`);
       return;
     }
 
@@ -1020,13 +991,9 @@ async function scanPlateImage(file) {
     setOcrStatus(`Detected: ${cleaned} | Matched: ${code}`);
     await runLookup();
 
-  } catch (e) {
+  } catch(e) {
     console.error("OCR error:", e);
-    setOcrStatus(`OCR failed: ${e.message || e}. See console for details.`);
-  } finally {
-    if (worker) {
-      try { await worker.terminate(); } catch (_) {}
-    }
+    setOcrStatus("OCR failed: " + (e.message || String(e)));
   }
 }
 
@@ -1116,6 +1083,30 @@ document.getElementById("plate-image").addEventListener("change", async (e) => {
   e.target.value = "";
 });
 
+// Global OCR scheduler — created once at page load so eng.traineddata
+// is downloaded/cached before the user ever taps the camera button.
+let ocrScheduler = null;
+
+async function initOcr() {
+  try {
+    ocrScheduler = Tesseract.createScheduler();
+    const worker = await Tesseract.createWorker("eng");
+    ocrScheduler.addWorker(worker);
+    console.log("OCR ready");
+  } catch(e) {
+    console.warn("OCR init failed (will retry on first scan):", e);
+    ocrScheduler = null;
+  }
+}
+
+// Lazy fallback: if scheduler failed at init, build a one-shot scheduler inline
+async function ensureScheduler() {
+  if (ocrScheduler) return;
+  ocrScheduler = Tesseract.createScheduler();
+  const worker = await Tesseract.createWorker("eng");
+  ocrScheduler.addWorker(worker);
+}
+
 async function init() {
   try {
     await loadPlateData();
@@ -1127,6 +1118,7 @@ async function init() {
   loadTopCountries();
   loadRecentSearches();
   loadMe();
+  initOcr(); // warm up in background — don't await, don't block page load
 }
 
 init();
