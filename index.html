@@ -534,12 +534,47 @@ const vehicleCard = document.getElementById("vehicle-card");
 const vehicleStatus = document.getElementById("vehicle-status");
 
 function normalizePlateInput(value) {
-  return String(value || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+  return String(value || "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "");
+}
+
+function extractPlateCandidateFromText(text) {
+  const upper = String(text || "").toUpperCase();
+
+  const patterns = [
+    /\b([A-Z]{3})[\s\-]*([0-9]{4})\b/g,   // DBB 0789
+    /\b([0-9]{4})[\s\-]*([A-Z]{3})\b/g    // 0789 DBB
+  ];
+
+  for (const pattern of patterns) {
+    const matches = [...upper.matchAll(pattern)];
+    if (matches.length) {
+      const m = matches[0];
+      return `${m[1]}${m[2]}`;
+    }
+  }
+
+  return normalizePlateInput(text);
 }
 
 function extractCode(value) {
   const cleaned = normalizePlateInput(value);
+
   if (!cleaned || !Object.keys(mapping).length) return null;
+
+  const knownCodes = Object.keys(mapping).sort((a, b) => b.length - a.length);
+
+  for (const code of knownCodes) {
+    if (cleaned.startsWith(code)) return code;
+  }
+
+  for (const code of knownCodes) {
+    if (cleaned.endsWith(code)) return code;
+  }
+
+  return null;
+}
 
   const knownCodes = Object.keys(mapping).sort((a, b) => b.length - a.length);
 
@@ -873,7 +908,7 @@ async function scanPlateImage(file) {
   try {
     const result = await Tesseract.recognize(file, "eng", { logger: () => {} });
     const raw = result?.data?.text || "";
-    const cleaned = normalizePlateInput(raw);
+    const cleaned = extractPlateCandidateFromText(raw);
 
     if (!cleaned) {
       setOcrStatus("Could not detect readable plate text.");
@@ -888,7 +923,7 @@ async function scanPlateImage(file) {
       return;
     }
 
-    setOcrStatus(`Detected: ${cleaned}. Matched code: ${code}.`);
+    setOcrStatus(`Detected plate candidate: ${cleaned}. Matched code: ${code}.`);
     await runLookup();
   } catch (e) {
     console.warn("OCR failed", e);
