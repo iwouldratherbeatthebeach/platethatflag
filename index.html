@@ -136,7 +136,7 @@
 
     .lookup-row {
       display: grid;
-      grid-template-columns: 1fr auto;
+      grid-template-columns: 1fr auto auto;
       gap: 12px;
       align-items: center;
     }
@@ -147,6 +147,25 @@
       border-radius: 14px;
       border: 0;
     }
+
+    .upload-button {
+  min-height: 56px;
+  border-radius: 14px;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.upload-button input {
+  display: none;
+}
 
     .lookup-row input,
     .vehicle-grid input {
@@ -351,6 +370,10 @@
       .lookup-row,
       .vehicle-grid {
         grid-template-columns: 1fr;
+      }
+
+      .upload-button {
+        width: 100%;
       }
 
       .lookup-row button,
@@ -991,33 +1014,36 @@
     setInterval(update, 2500);
   }
 
-  function normalizePlateInput(value) {
-    return String(value || "")
-      .toUpperCase()
-      .replace(/[^A-Z0-9]/g, "");
+ function normalizePlateInput(value) {
+  return String(value || "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "");
+}
+
+function extractCode(value) {
+  const cleaned = normalizePlateInput(value);
+
+  if (!cleaned || !Object.keys(mapping).length) return null;
+
+  const knownCodes = Object.keys(mapping).sort((a, b) => b.length - a.length);
+
+  // Normal format: DBB0789, DFT0150
+  for (const code of knownCodes) {
+    if (cleaned.startsWith(code)) {
+      return code;
+    }
   }
 
-  function extractCode(value) {
-    const cleaned = normalizePlateInput(value);
-
-    if (!cleaned || !Object.keys(mapping).length) return null;
-
-    // Normal diplomatic format: DBB0789, DFT0150, CAA1234
-    const lettersFirst = cleaned.match(/^([A-Z]{1,4})\d*/);
-    if (lettersFirst && mapping[lettersFirst[1]]) {
-      return lettersFirst[1];
+  // Reversed / UN-style format: 0789DBB, 1234ABC
+  for (const code of knownCodes) {
+    if (cleaned.endsWith(code)) {
+      return code;
     }
-
-    // Reversed / UN-style format: 0789DBB, 1234ABC
-    const numbersFirst = cleaned.match(/^\d+([A-Z]{1,4})$/);
-    if (numbersFirst && mapping[numbersFirst[1]]) {
-      return numbersFirst[1];
-    }
-
-    // Fallback: longest matching known code anywhere in the scanned/typed text
-    const knownCodes = Object.keys(mapping).sort((a, b) => b.length - a.length);
-    return knownCodes.find(code => cleaned.includes(code)) || null;
   }
+
+  // Fallback: OCR may include extra noise around the plate
+  return knownCodes.find(code => cleaned.includes(code)) || null;
+}
 
   function splitDesc(desc) {
     const m = desc.match(/^(.+?)\s+(UN Diplomat|Consul|Diplomat|Staff)$/);
