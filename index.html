@@ -915,11 +915,12 @@ async function scanPlateImage(file) {
   setOcrStatus("Scanning image...");
 
   try {
-    // ---- Canvas preprocessing ----
     const bitmap = await createImageBitmap(file);
     const W = bitmap.width, H = bitmap.height;
 
-    async function prepareBlob(srcX, srcY, srcW, srcH, scale) {
+    // Returns a Canvas element (not a Blob) — Tesseract.js loadImage handles
+    // canvas natively via canvas.toBlob() + FileReader internally
+    function prepareCanvas(srcX, srcY, srcW, srcH, scale) {
       const canvas = document.createElement("canvas");
       canvas.width  = srcW * scale;
       canvas.height = srcH * scale;
@@ -927,48 +928,47 @@ async function scanPlateImage(file) {
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = "high";
       ctx.drawImage(bitmap, srcX, srcY, srcW, srcH, 0, 0, canvas.width, canvas.height);
+
+      // Grayscale + Otsu threshold
       const id = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const d = id.data;
       let sum = 0;
       for (let i = 0; i < d.length; i += 4)
-        sum += 0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2];
+        sum += 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
       const thresh = (sum / (d.length / 4)) * 0.85;
       for (let i = 0; i < d.length; i += 4) {
         const bw = (0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2]) > thresh ? 255 : 0;
         d[i] = d[i+1] = d[i+2] = bw; d[i+3] = 255;
       }
       ctx.putImageData(id, 0, 0);
-      return new Promise(r => canvas.toBlob(r, "image/png"));
+      return canvas;
     }
 
-    // Pass 1: cropped character band
-    const blob1 = await prepareBlob(
+    const canvas1 = prepareCanvas(
       Math.round(W*0.03), Math.round(H*0.20),
       Math.round(W*0.94), Math.round(H*0.55), 4
     );
+    const canvas2 = prepareCanvas(0, 0, W, H, 3);
 
-    // Pass 2: full image fallback
-    const blob2 = await prepareBlob(0, 0, W, H, 3);
-
-    // ---- OCR using the pre-warmed scheduler ----
     await ensureScheduler();
-    async function ocrBlob(blob) {
+
+    async function ocrCanvas(canvas) {
       for (const psm of ["8", "13", "7"]) {
-        const result = await ocrScheduler.addJob("recognize", blob, {
+        const result = await ocrScheduler.addJob("recognize", canvas, {
           tessedit_pageseg_mode: psm,
           tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
         });
         const raw = (result?.data?.text || "").trim().replace(/\s+/g, "");
-        console.log("PSM", psm, "->", raw);
+        console.log("PSM", psm, "->", JSON.stringify(raw));
         if (raw) return raw;
       }
       return "";
     }
 
-    let raw = await ocrBlob(blob1);
+    let raw = await ocrCanvas(canvas1);
     if (!extractPlateCandidateFromText(raw)) {
       console.log("Pass 1 empty, trying full image");
-      raw = await ocrBlob(blob2);
+      raw = await ocrCanvas(canvas2);
     }
 
     console.log("Final raw:", raw);
