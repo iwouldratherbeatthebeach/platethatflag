@@ -551,47 +551,24 @@ function extractPlateCandidateFromText(text) {
      .replace(/L/g, "1")
      .replace(/S/g, "5");
 
-  const compact = upper.replace(/[^A-Z0-9]/g, "");
+  const cleaned = upper.replace(/[^A-Z0-9]/g, "");
 
-  const patterns = [
-    /([A-Z])\s*([A-Z])\s*([A-Z])[\s\-]*([0-9OQILS]{4})/g, // D W D 1675
-    /([A-Z]{3})[\s\-]*([0-9OQILS]{4})/g,                  // DWD 1675
-    /([A-Z]{2})[\s\-]*([0-9OQILS]{4})/g,                  // AG 0150
-    /([0-9OQILS]{4})[\s\-]*([A-Z]{3})/g,                  // 1675 DWD
-    /([0-9OQILS]{4})[\s\-]*([A-Z]{2})/g                   // 0150 AG
-  ];
+  const candidates = [
+    cleaned.match(/([A-Z]{3})([0-9OQILS]{4})/),
+    cleaned.match(/([A-Z]{2})([0-9OQILS]{4})/),
+    cleaned.match(/([0-9OQILS]{4})([A-Z]{3})/),
+    cleaned.match(/([0-9OQILS]{4})([A-Z]{2})/)
+  ].filter(Boolean);
 
-  for (const pattern of patterns) {
-    const m = pattern.exec(upper);
-    if (!m) continue;
+  if (!candidates.length) return "";
 
-    // spaced 3-letter format: D W D 1675
-    if (m.length === 5 && /^[A-Z]$/.test(m[1])) {
-      return `${m[1]}${m[2]}${m[3]}${normalizeDigits(m[4])}`;
-    }
+  const m = candidates[0];
 
-    // normal letters-first
-    if (/^[A-Z]/.test(m[1])) {
-      return `${m[1]}${normalizeDigits(m[2])}`;
-    }
-
-    // reversed numbers-first
-    return `${normalizeDigits(m[1])}${m[2]}`;
+  if (/^[A-Z]/.test(m[1])) {
+    return `${m[1]}${normalizeDigits(m[2])}`;
   }
 
-  // final fallback against compacted OCR text
-  const compactMatch =
-    compact.match(/([A-Z]{2,3})([0-9OQILS]{4})/) ||
-    compact.match(/([0-9OQILS]{4})([A-Z]{2,3})/);
-
-  if (compactMatch) {
-    if (/^[A-Z]/.test(compactMatch[1])) {
-      return `${compactMatch[1]}${normalizeDigits(compactMatch[2])}`;
-    }
-    return `${normalizeDigits(compactMatch[1])}${compactMatch[2]}`;
-  }
-
-  return "";
+  return `${normalizeDigits(m[1])}${m[2]}`;
 }
 function extractCode(value) {
   const cleaned = normalizePlateInput(value);
@@ -929,14 +906,18 @@ async function scanPlateImage(file) {
 
   try {
     const result = await Tesseract.recognize(file, "eng", {
-  logger: () => {},
-  tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 "
-});
+      logger: () => {}
+    });
+
     const raw = result?.data?.text || "";
     const cleaned = extractPlateCandidateFromText(raw);
 
+    console.log("RAW OCR:", raw);
+    console.log("CLEANED OCR:", normalizePlateInput(raw));
+    console.log("PLATE CANDIDATE:", cleaned);
+
     if (!cleaned) {
-      setOcrStatus("Could not detect readable plate text.");
+      setOcrStatus(`Could not detect plate text. OCR read: ${normalizePlateInput(raw).slice(0, 80)}`);
       return;
     }
 
@@ -944,15 +925,16 @@ async function scanPlateImage(file) {
     plateInput.value = cleaned;
 
     if (!code) {
-      setOcrStatus(`Detected: ${cleaned}. No matching code found.`);
+      setOcrStatus(`Detected plate candidate: ${cleaned}. No matching code found.`);
       return;
     }
 
     setOcrStatus(`Detected plate candidate: ${cleaned}. Matched code: ${code}.`);
     await runLookup();
+
   } catch (e) {
     console.warn("OCR failed", e);
-    setOcrStatus("OCR failed.");
+    setOcrStatus("OCR failed. Check browser console for details.");
   }
 }
 
