@@ -8,16 +8,13 @@ async function sha256Hex(value) {
     .join("");
 }
 
-// Scoring constants
-const POINTS_LOOKUP = 1;
-
 export async function onRequestPost(context) {
   try {
     const { request, env } = context;
     const body = await request.json();
 
-    const country    = (body.country     || "").trim();
-    const plateCode  = (body.plateCode   || "").trim().toUpperCase();
+    const country = (body.country || "").trim();
+    const plateCode = (body.plateCode || "").trim().toUpperCase();
     const missionRole = (body.missionRole || "").trim();
 
     if (!country) {
@@ -29,19 +26,32 @@ export async function onRequestPost(context) {
 
     const user = await getUserFromRequest(env, request);
 
-    const ip        = request.headers.get("CF-Connecting-IP") || request.headers.get("x-forwarded-for") || "";
-    const ipCountry = request.headers.get("CF-IPCountry") || "XX";
-    const userAgent = request.headers.get("user-agent") || "";
-    const hashedIp  = ip ? await sha256Hex(ip) : null;
+    const ip =
+      request.headers.get("CF-Connecting-IP") ||
+      request.headers.get("x-forwarded-for") ||
+      "";
+
+    const ipCountry =
+      request.headers.get("CF-IPCountry") ||
+      "XX";
+
+    const userAgent =
+      request.headers.get("user-agent") ||
+      "";
+
+    const hashedIp = ip ? await sha256Hex(ip) : null;
     const isFullPlate = /\d/.test(plateCode);
 
-    // Upsert country aggregate
     await env.DB.prepare(`
       INSERT INTO country_queries (country, query_count, updated_at)
       VALUES (?, 1, CURRENT_TIMESTAMP)
       ON CONFLICT(country)
-      DO UPDATE SET query_count = query_count + 1, updated_at = CURRENT_TIMESTAMP
-    `).bind(country).run();
+      DO UPDATE SET
+        query_count = query_count + 1,
+        updated_at = CURRENT_TIMESTAMP
+    `)
+      .bind(country)
+      .run();
 
     let plateCount = null;
 
@@ -50,43 +60,49 @@ export async function onRequestPost(context) {
         INSERT INTO plate_queries (plate_code, country, query_count, updated_at)
         VALUES (?, ?, 1, CURRENT_TIMESTAMP)
         ON CONFLICT(plate_code)
-        DO UPDATE SET query_count = query_count + 1, country = excluded.country, updated_at = CURRENT_TIMESTAMP
-      `).bind(plateCode, country).run();
+        DO UPDATE SET
+          query_count = query_count + 1,
+          country = excluded.country,
+          updated_at = CURRENT_TIMESTAMP
+      `)
+        .bind(plateCode, country)
+        .run();
 
-      const plateRow = await env.DB.prepare(
-        `SELECT query_count FROM plate_queries WHERE plate_code = ?`
-      ).bind(plateCode).first();
+      const plateRow = await env.DB.prepare(`
+        SELECT query_count
+        FROM plate_queries
+        WHERE plate_code = ?
+      `)
+        .bind(plateCode)
+        .first();
 
       plateCount = plateRow?.query_count ?? null;
     }
 
-    // Insert query event
     await env.DB.prepare(`
-      INSERT INTO query_events (country, plate_code, mission_role, ip_country, hashed_ip, user_agent, user_id, anonymous)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `).bind(
-      country,
-      plateCode || null,
-      missionRole || null,
-      ipCountry,
-      hashedIp,
-      userAgent,
-      user?.id || null,
-      user ? 0 : 1
-    ).run();
+      INSERT INTO query_events (
+        country, plate_code, ip_country, hashed_ip, user_agent, user_id, anonymous
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `)
+      .bind(
+        country,
+        plateCode || null,
+        ipCountry,
+        hashedIp,
+        userAgent,
+        user?.id || null,
+        user ? 0 : 1
+      )
+      .run();
 
-    // Award +1 point to logged-in users for a lookup
-    let newScore = null;
-    if (user) {
-      const updated = await env.DB.prepare(
-        `UPDATE users SET score = score + ? WHERE id = ? RETURNING score`
-      ).bind(POINTS_LOOKUP, user.id).first();
-      newScore = updated?.score ?? null;
-    }
-
-    const row = await env.DB.prepare(
-      `SELECT country, query_count FROM country_queries WHERE country = ?`
-    ).bind(country).first();
+    const row = await env.DB.prepare(`
+      SELECT country, query_count
+      FROM country_queries
+      WHERE country = ?
+    `)
+      .bind(country)
+      .first();
 
     return new Response(JSON.stringify({
       ok: true,
@@ -94,13 +110,16 @@ export async function onRequestPost(context) {
       count: row.query_count,
       plateCount,
       missionRole,
-      searchedBy: user?.username || "Anonymous",
-      pointsEarned: user ? POINTS_LOOKUP : 0,
-      newScore
-    }), { headers: { "Content-Type": "application/json" } });
-
+      searchedBy: user?.username || "Anonymous"
+    }), {
+      headers: { "Content-Type": "application/json" }
+    });
   } catch (error) {
-    return new Response(JSON.stringify({ ok: false, error: "Server error", details: String(error) }), {
+    return new Response(JSON.stringify({
+      ok: false,
+      error: "Server error",
+      details: String(error)
+    }), {
       status: 500,
       headers: { "Content-Type": "application/json" }
     });
