@@ -1,1221 +1,199 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Flag That Plate</title>
-  <link rel="icon" type="image/png" href="/icon.png" />
-  <link rel="apple-touch-icon" href="/icon.png" />
-
-  <style>
-    .hero-plate {
-  width: min(520px, 40%);
-  display: block;
-  margin: 0 auto 18px auto;
-  border-radius: 14px;
-  box-shadow: 0 10px 28px rgba(0,0,0,0.45);
-}
-    :root {
-      --bg-1: #020617;
-      --bg-2: #0f172a;
-      --panel: rgba(15, 23, 42, 0.88);
-      --panel-2: rgba(30, 41, 59, 0.92);
-      --border: rgba(255,255,255,0.08);
-      --text: #f8fafc;
-      --muted: #cbd5e1;
-      --subtle: #94a3b8;
-      --accent: #38bdf8;
-      --accent-2: #2563eb;
-      --warn-bg: rgba(245, 158, 11, 0.12);
-      --warn-border: rgba(245, 158, 11, 0.28);
-      --warn-text: #fde68a;
-      --good: #86efac;
-      --good-bg: rgba(34, 197, 94, 0.12);
-      --good-border: rgba(34, 197, 94, 0.24);
-      --shadow: 0 18px 42px rgba(0,0,0,0.35);
-      --radius: 18px;
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: Inter, system-ui, Arial, sans-serif;
-      color: var(--text);
-      background:
-        radial-gradient(circle at top, rgba(56,189,248,0.14), transparent 35%),
-        linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
-      min-height: 100vh;
-    }
-
-    .wrap {
-      width: min(100%, 1120px);
-      margin: 0 auto;
-      padding: 24px 16px 40px;
-    }
-
-    .topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 16px;
-      margin-bottom: 12px;
-      flex-wrap: wrap;
-    }
-
-    .nav {
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-
-    .nav a,
-    .link-list a,
-    footer a,
-    .auth-note a {
-      color: var(--accent);
-      text-decoration: none;
-    }
-
-    .auth-note {
-      color: var(--muted);
-      font-size: 0.95rem;
-    }
-
-    .auth-note strong {
-      color: var(--text);
-    }
-
-    .hero {
-      text-align: center;
-      padding: 10px 8px 8px;
-      margin-bottom: 18px;
-    }
-
-    .hero h1 {
-      margin: 0 0 12px;
-      font-size: clamp(2.3rem, 4.8vw, 3.8rem);
-      line-height: 1.02;
-      letter-spacing: -0.02em;
-    }
-
-    .hero p {
-      margin: 0 auto;
-      max-width: 720px;
-      color: var(--muted);
-      font-size: 1.04rem;
-      line-height: 1.6;
-    }
-
-    .layout {
-      display: grid;
-      grid-template-columns: 1.5fr 0.85fr;
-      gap: 20px;
-      align-items: start;
-    }
-
-    .card {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(10px);
-      padding: 18px;
-    }
-
-    .sidebar-sticky {
-      position: sticky;
-      top: 16px;
-    }
-
-    .lookup-help {
-      color: var(--muted);
-      margin-bottom: 14px;
-      line-height: 1.55;
-    }
-
-    .lookup-row {
-      display: grid;
-      grid-template-columns: 1fr auto auto;
-      gap: 12px;
-      align-items: center;
-    }
-
-    input, button {
-      font-size: 1rem;
-      min-height: 56px;
-      border-radius: 14px;
-      border: 0;
-    }
-
-.upload-button {
-  min-height: 56px;
-  width: 56px;
-  border-radius: 14px;
-  padding: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  color: white;
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.upload-button input {
-  display: none;
-}
-
-.upload-button svg {
-  pointer-events: none;
-}
-
-    .lookup-row input,
-    .vehicle-grid input {
-      width: 100%;
-      padding: 0 16px;
-      background: #fff;
-      color: #111827;
-    }
-
-    .lookup-row button,
-    .vehicle-submit {
-      padding: 0 22px;
-      background: linear-gradient(135deg, var(--accent), var(--accent-2));
-      color: white;
-      font-weight: 700;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-
-    .section-title {
-      margin: 0 0 10px;
-      font-size: 1.08rem;
-      color: var(--text);
-    }
-
-    .result-stack {
-      display: none;
-      gap: 14px;
-      margin-top: 18px;
-    }
-
-    .result-stack.show {
-      display: grid;
-    }
-
-    .box {
-      background: var(--panel-2);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 16px;
-    }
-
-    #result {
-      font-size: 1.35rem;
-      font-weight: 800;
-      margin-bottom: 14px;
-    }
-
-    .flag-wrap {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    #flag {
-      display: none;
-      width: min(260px, 100%);
-      border-radius: 12px;
-      box-shadow: 0 8px 18px rgba(0,0,0,0.28);
-    }
-
-    #count, #facts, #role-def {
-      color: var(--muted);
-      line-height: 1.65;
-    }
-
-    #count {
-      margin-bottom: 18px;
-      padding-bottom: 14px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-    }
-
-    #facts > div {
-      margin-top: 10px;
-    }
-
-    .unknown-box,
-    .inline-message {
-      display: none;
-      margin-top: 18px;
-      padding: 16px 18px;
-      border-radius: 16px;
-      line-height: 1.6;
-    }
-
-    .unknown-box.show,
-    .inline-message.show {
-      display: block;
-    }
-
-    .unknown-box {
-      background: var(--warn-bg);
-      border: 1px solid var(--warn-border);
-      color: var(--warn-text);
-    }
-
-    .inline-message.good {
-      background: var(--good-bg);
-      border: 1px solid var(--good-border);
-      color: var(--good);
-    }
-
-    .inline-message.bad {
-      background: var(--warn-bg);
-      border: 1px solid var(--warn-border);
-      color: var(--warn-text);
-    }
-
-    .vehicle-card {
-      display: none;
-      margin-top: 14px;
-    }
-
-    .vehicle-card.show {
-      display: block;
-    }
-
-    .vehicle-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 10px;
-    }
-
-    .vehicle-status {
-      margin-top: 12px;
-      display: none;
-      padding: 12px 14px;
-      border-radius: 12px;
-      line-height: 1.5;
-    }
-
-    .vehicle-status.show {
-      display: block;
-    }
-
-    .vehicle-status.good {
-      background: var(--good-bg);
-      border: 1px solid var(--good-border);
-      color: var(--good);
-    }
-
-    .vehicle-status.bad {
-      background: var(--warn-bg);
-      border: 1px solid var(--warn-border);
-      color: var(--warn-text);
-    }
-
-    .top-list,
-    .recent-list,
-    .link-list {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-    }
-
-    .top-list li,
-    .recent-list li,
-    .link-list li {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 12px 0;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .top-list li:last-child,
-    .recent-list li:last-child,
-    .link-list li:last-child {
-      border-bottom: 0;
-    }
-
-    .recent-meta {
-      color: var(--subtle);
-      font-size: 0.92rem;
-      margin-top: 2px;
-    }
-
-    footer {
-      margin-top: 26px;
-      text-align: center;
-      color: var(--muted);
-      font-size: 0.95rem;
-    }
-
-    @media (max-width: 980px) {
-      .layout {
-        grid-template-columns: 1fr;
-      }
-
-      .sidebar-sticky {
-        position: static;
-      }
-
-      .topbar {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-    }
-
-    @media (max-width: 640px) {
-      .lookup-row,
-      .vehicle-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .upload-button {
-        width: 100%;
-      }
-
-      .lookup-row button,
-      .vehicle-submit {
-        width: 100%;
-      }
-
-      .wrap {
-        padding: 16px 12px 28px;
-      }
-
-      .card {
-        padding: 14px;
-      }
-    }
-  </style>
+  <meta name="description" content="Decode a U.S. diplomatic license plate: type its letters to see the country, the mission role and the flag, and see which countries people look up most.">
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4f6f8">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0d0e10">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/icon-192.png">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Flag That Plate">
+  <meta property="og:title" content="Flag That Plate">
+  <meta property="og:description" content="Type the letters on a U.S. diplomatic license plate to see the country, the mission role and the flag.">
+  <meta property="og:image" content="https://platethatflag.pages.dev/assets/img/og-plate.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600&family=DM+Sans:wght@400;600;700&display=swap">
+  <link rel="stylesheet" href="/assets/css/site.css">
+  <script>(function () { try { var t = localStorage.getItem("ptf-theme"); if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); } catch (e) {} })();</script>
+  <script type="module" src="/assets/js/lookup.js"></script>
 </head>
 <body>
-  <div class="wrap">
-    <div class="topbar">
-      <div class="nav">
-        <a href="/">Home</a>
-        <a href="/login.html">Login</a>
-        <a href="/about.html">About</a>
+  <a class="skip-link" href="#main">Skip to the decoder</a>
+
+  <header class="topbar">
+    <div class="column topbar__inner">
+      <a class="brand" href="/" aria-label="Flag That Plate, home">
+        <svg class="brand__mark" viewBox="4.5 3.5 58 58.5" width="30" height="30" aria-hidden="true" focusable="false"><path class="mark__field" d="M14 11C29 6.5 43 15.5 58 11V36C43 40.5 29 31.5 14 36Z"/><path class="mark__band" d="M14 11C29 6.5 43 15.5 58 11V19.5C43 24 29 15 14 19.5Z"/><path class="mark__line" d="M14 11C29 6.5 43 15.5 58 11V36C43 40.5 29 31.5 14 36Z"/><circle class="mark__bolt" cx="20.5" cy="31" r="2.1"/><circle class="mark__bolt" cx="51.5" cy="32.4" r="2.1"/><path class="mark__pole" d="M11 9V60"/><circle class="mark__finial" cx="11" cy="6.5" r="3"/></svg>
+        <span>Flag That Plate</span>
+      </a>
+      <nav class="nav" aria-label="Main">
+        <a href="/" aria-current="page">Decode</a>
         <a href="/leaderboard.html">Leaderboard</a>
-      </div>
-      <div id="auth-status" class="auth-note"></div>
+        <a href="/about.html">About</a>
+      </nav>
+      <div class="account" data-account></div>
+      <button class="btn btn--quiet btn--icon menu-button" type="button" aria-expanded="false" aria-controls="menu-sheet" aria-label="Open menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+    <div class="sheet" id="menu-sheet">
+      <nav class="nav" aria-label="Main">
+        <a href="/" aria-current="page">Decode</a>
+        <a href="/leaderboard.html">Leaderboard</a>
+        <a href="/about.html">About</a>
+      </nav>
+      <div class="sheet__account" data-account-sheet></div>
+    </div>
+  </header>
+  <div class="scrim" data-scrim></div>
+
+  <main id="main" class="column">
+    <div class="page-head">
+      <h1 class="title">Decode a diplomatic plate</h1>
+      <p class="lead">Type the letters on a U.S. diplomatic license plate to see the country, the mission role and the flag.</p>
     </div>
 
-    <div class="hero">
-       <img src="/diplomatic-plate.png" class="hero-plate" alt="Example diplomatic plate" />
+    <div class="screen">
+      <div class="stack">
+        <section class="panel" aria-labelledby="decoder-title">
+          <h2 id="decoder-title" class="sr-only">Plate decoder</h2>
+          <form id="lookup-form" class="decoder" novalidate>
+            <div class="decoder__label">
+              <label for="plate">Plate letters and numbers</label>
+              <span class="small muted" id="plate-hint">Spaces and dashes are fine</span>
+            </div>
 
-      <h1>Flag That Plate</h1>
-      <p>
-        Enter a diplomatic plate code to identify the country and mission role,
-        view the flag, explore quick facts, and see how often each country has been searched.
-      </p>
-    </div>
-
-    <div class="layout">
-      <div>
-        <div class="card">
-          <div class="lookup-help">
-            Enter a plate like <span id="example-code">DFT</span> or <span id="example-plate">DFT0150</span>.
-          </div>
-
-<div class="lookup-row">
-  <input id="plate" placeholder="Type plate code or full plate..." />
-  <button id="go" type="button">Lookup</button>
-
-<label class="upload-button camera-btn" for="plate-image" title="Scan plate from image">
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-       fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
-    <path d="M10.5 2a1 1 0 0 1 .8.4l.7 1H14a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2h2l.7-1a1 1 0 0 1 .8-.4h5zM8 5a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>
-  </svg>
-  <input id="plate-image" type="file" accept="image/*" />
-</label>
-</div>
-
-<div id="ocr-status" class="lookup-help" style="margin-top:12px;"></div>
-
-          <div id="lookup-message" class="inline-message"></div>
-          <div id="unknown-box" class="unknown-box"></div>
-
-          <div id="result-stack" class="result-stack">
-            <div class="box">
-              <div id="result"></div>
-              <div class="flag-wrap">
-                <img id="flag" alt="Country flag" />
+            <div class="plate" data-plate>
+              <div class="plate__face">
+                <div class="plate__band" data-band aria-hidden="true">Diplomat</div>
+                <input class="plate__chars" id="plate" name="plate" type="text" inputmode="text"
+                  autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false"
+                  enterkeyhint="search" maxlength="12" placeholder="DAF 0789"
+                  aria-describedby="plate-hint plate-error">
+                <div class="plate__foot" aria-hidden="true"><span class="plate__bolt"></span><span class="plate__bolt"></span></div>
               </div>
             </div>
+            <p class="field__error" id="plate-error" role="alert" hidden></p>
 
-            <div class="box">
-              <div id="count"></div>
-              <div id="facts"></div>
+            <dl class="decode" data-decode aria-label="Example: DAF 0789 decoded">
+              <div class="decode__part"><dt>Role <span class="decode__code">D</span></dt><dd class="is-empty">Diplomat</dd></div>
+              <div class="decode__part decode__part--country"><dt>Country <span class="decode__code">AF</span></dt><dd class="is-empty">Japan</dd></div>
+              <div class="decode__part"><dt>Serial</dt><dd class="is-empty">0789</dd></div>
+            </dl>
+            <p class="also" data-also hidden></p>
+
+            <div class="decoder__actions">
+              <button class="btn btn--primary" type="submit" data-submit><span>Look up plate</span></button>
+              <button class="btn" type="button" data-scan>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.3l1.2-1.8A1.5 1.5 0 0 1 10.3 3.5h3.4a1.5 1.5 0 0 1 1.3.7L16.2 6h1.3A2.5 2.5 0 0 1 20 8.5v8a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5z"/><circle cx="12" cy="12.5" r="3.5"/></svg>
+                <span>Scan a photo</span>
+              </button>
+              <input type="file" accept="image/*" data-file hidden aria-hidden="true" tabindex="-1">
+              <p class="decoder__examples">
+                Try
+                <button class="text-button" type="button" data-example="DTG 4417">DTG 4417</button>
+                <button class="text-button" type="button" data-example="CDL 2051">CDL 2051</button>
+                <button class="text-button" type="button" data-example="QX">QX</button>
+              </p>
             </div>
 
-            <div class="box" id="role-def"></div>
-
-            <div class="box">
-              <h2 class="section-title">Useful Links</h2>
-              <ul id="country-links" class="link-list">
-                <li><span>Run a lookup to load country links.</span></li>
-              </ul>
+            <div class="ocr" data-ocr hidden>
+              <button class="ocr__photo" type="button" data-ocr-photo disabled aria-describedby="ocr-tap">
+                <img data-ocr-thumb alt="Your photo">
+                <span class="ocr__mark" data-ocr-mark hidden></span>
+              </button>
+              <div class="ocr__body">
+                <p class="ocr__text" data-ocr-text role="status" aria-live="polite"></p>
+                <div class="progress" data-ocr-progress hidden><div class="progress__fill" data-ocr-fill></div></div>
+                <p class="ocr__choices" data-ocr-choices hidden></p>
+                <p class="ocr__hint" id="ocr-tap" data-ocr-hint hidden>Tap the plate in the photo to read that spot again.</p>
+              </div>
             </div>
+          </form>
+          <noscript><p class="message message--notice noscript">The decoder needs JavaScript. The plate codes are listed in <a class="link" href="/plates.csv">plates.csv</a>.</p></noscript>
+        </section>
+
+        <div data-messages></div>
+
+        <section class="panel result" data-result aria-labelledby="result-title" hidden></section>
+
+        <section class="panel" data-sighting aria-labelledby="sighting-title" hidden>
+          <div class="panel__head">
+            <h2 class="section-title" id="sighting-title">Log this vehicle</h2>
+            <span class="panel__meta" data-sighting-plate></span>
           </div>
-
-          <div id="vehicle-card" class="box vehicle-card">
-            <h2 class="section-title">Add Vehicle Observation</h2>
-            <p class="lookup-help" style="margin-top:0;">
-              Optional: add vehicle details for this full plate.
-            </p>
-
-            <div class="vehicle-grid">
-              <input id="obs-city" placeholder="City (optional)" />
-              <input id="obs-state" placeholder="State (optional)" />
-              <input id="obs-make" placeholder="Vehicle make (optional)" />
-              <input id="obs-model" placeholder="Vehicle model (optional)" />
-              <input id="obs-color" placeholder="Vehicle color (optional)" />
+          <form id="sighting-form" class="form" novalidate>
+            <p class="muted">Seen this car? Add what you noticed. Every field is optional.</p>
+            <div class="form__grid">
+              <div class="field">
+                <label class="field__label" for="obs-city">City</label>
+                <input class="input" id="obs-city" name="city" autocomplete="address-level2" maxlength="80">
+              </div>
+              <div class="field">
+                <label class="field__label" for="obs-state">State</label>
+                <input class="input" id="obs-state" name="state" autocomplete="address-level1" maxlength="80">
+              </div>
+              <div class="field">
+                <label class="field__label" for="obs-make">Make</label>
+                <input class="input" id="obs-make" name="make" autocomplete="off" maxlength="60" placeholder="Toyota">
+              </div>
+              <div class="field">
+                <label class="field__label" for="obs-model">Model</label>
+                <input class="input" id="obs-model" name="model" autocomplete="off" maxlength="60" placeholder="Land Cruiser">
+              </div>
+              <div class="field">
+                <label class="field__label" for="obs-color">Color</label>
+                <input class="input" id="obs-color" name="color" autocomplete="off" maxlength="40" placeholder="Black">
+              </div>
             </div>
-
-            <div style="margin-top:12px;">
-              <button id="save-observation" class="vehicle-submit" type="button">Save Observation</button>
+            <p class="field__error" data-sighting-status role="alert" hidden></p>
+            <div class="form__actions">
+              <button class="btn" type="submit"><span>Save sighting</span></button>
             </div>
-
-            <div id="vehicle-status" class="vehicle-status"></div>
-          </div>
-        </div>
+          </form>
+        </section>
       </div>
 
-      <div class="sidebar-sticky">
-        <div class="card">
-          <h2 class="section-title">Most Queried Countries</h2>
-          <ul id="top-countries-list" class="top-list">
-            <li><span>Loading...</span></li>
-          </ul>
-        </div>
+      <aside class="rail" aria-label="Lookup activity">
+        <section class="panel" aria-labelledby="top-title">
+          <div class="panel__head">
+            <h2 class="section-title" id="top-title">Most looked-up countries</h2>
+            <span class="panel__meta">All time</span>
+          </div>
+          <ol class="ranking" data-top></ol>
+        </section>
+        <section class="panel" aria-labelledby="recent-title">
+          <div class="panel__head">
+            <h2 class="section-title" id="recent-title">Recent lookups</h2>
+          </div>
+          <ul class="rows" data-recent></ul>
+        </section>
+      </aside>
+    </div>
+  </main>
 
-        <div class="card" style="margin-top: 18px;">
-          <h2 class="section-title">Recent Searches</h2>
-          <ul id="recent-searches-list" class="recent-list">
-            <li><span>Loading...</span></li>
-          </ul>
+  <footer class="footer">
+    <div class="column footer__inner">
+      <span class="footer__brand"><svg class="brand__mark brand__mark--small" viewBox="4.5 3.5 58 58.5" width="24" height="24" aria-hidden="true" focusable="false"><path class="mark__field" d="M14 11C29 6.5 43 15.5 58 11V36C43 40.5 29 31.5 14 36Z"/><path class="mark__band" d="M14 11C29 6.5 43 15.5 58 11V19.5C43 24 29 15 14 19.5Z"/><path class="mark__line" d="M14 11C29 6.5 43 15.5 58 11V36C43 40.5 29 31.5 14 36Z"/><circle class="mark__bolt" cx="20.5" cy="31" r="2.1"/><circle class="mark__bolt" cx="51.5" cy="32.4" r="2.1"/><path class="mark__pole" d="M11 9V60"/><circle class="mark__finial" cx="11" cy="6.5" r="3"/></svg>Flag That Plate</span>
+      <span class="footer__links">
+        <span>Content under <a class="link" href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC BY 4.0</a></span>
+        <a class="link" href="mailto:flagthatplate@gmail.com">flagthatplate@gmail.com</a>
+      </span>
+      <div class="footer__end">
+        <div class="segmented" role="group" aria-label="Theme" data-theme-switch>
+          <button type="button" data-value="system" aria-pressed="true">System</button>
+          <button type="button" data-value="light" aria-pressed="false">Light</button>
+          <button type="button" data-value="dark" aria-pressed="false">Dark</button>
         </div>
       </div>
     </div>
-
-    <footer>
-      © Flag That Plate · Creative Commons Attribution 4.0 ·
-      <a href="mailto:flagthatplate@gmail.com">flagthatplate@gmail.com</a>
-    </footer>
-  </div>
-
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-
-<script>
-let mapping = {};
-let exampleCodes = [];
-let lastLookupCountry = null;
-let lastLookupPlate = null;
-
-// Free, keyless flag CDN (https://restcountries.com/flags) served from
-// flags.restcountries.com. The old restcountries.com/v3.1 data API used
-// below was retired and now requires a paid account + API key, so flags
-// are resolved locally against ISO 3166-1 alpha-2 codes instead of an
-// external country-data lookup.
-const countryToIso2 = {
-  "Afghanistan": "af",
-  "Albania": "al",
-  "Algeria": "dz",
-  "Andorra": "ad",
-  "Angola": "ao",
-  "Antigua & Barbuda": "ag",
-  "Argentina": "ar",
-  "Armenia": "am",
-  "Australia": "au",
-  "Austria": "at",
-  "Azerbaijan": "az",
-  "Bahamas": "bs",
-  "Bahrain": "bh",
-  "Bangladesh": "bd",
-  "Barbados": "bb",
-  "Belarus": "by",
-  "Belgium": "be",
-  "Belize": "bz",
-  "Benin": "bj",
-  "Bhutan": "bt",
-  "Bolivia": "bo",
-  "Bosnia-Herzegovina": "ba",
-  "Botswana": "bw",
-  "Brazil": "br",
-  "Brunei": "bn",
-  "Bulgaria": "bg",
-  "Burkina Faso": "bf",
-  "Burundi": "bi",
-  "Cambodia": "kh",
-  "Cameroon": "cm",
-  "Canada": "ca",
-  "Cape Verde": "cv",
-  "Central African Republic": "cf",
-  "Chad": "td",
-  "Chile": "cl",
-  "Colombia": "co",
-  "Comoros": "km",
-  "Costa Rica": "cr",
-  "Cote d'Ivoire": "ci",
-  "Croatia": "hr",
-  "Cuba (UN only)": "cu",
-  "Cyprus": "cy",
-  "Czech Republic": "cz",
-  "Denmark": "dk",
-  "Djibouti": "dj",
-  "Dominica": "dm",
-  "Dominican Republic": "do",
-  "Ecuador": "ec",
-  "Egypt": "eg",
-  "El Salvador": "sv",
-  "Equatorial Guinea": "gq",
-  "Eritrea": "er",
-  "Estonia": "ee",
-  "Ethiopia": "et",
-  "Fiji": "fj",
-  "Finland": "fi",
-  "France": "fr",
-  "Gabon": "ga",
-  "Gambia": "gm",
-  "Georgia": "ge",
-  "Germany": "de",
-  "Ghana": "gh",
-  "Greece": "gr",
-  "Grenada": "gd",
-  "Guatemala": "gt",
-  "Guinea": "gn",
-  "Guinea Bissau": "gw",
-  "Guyana": "gy",
-  "Haiti": "ht",
-  "Holy See": "va",
-  "Honduras": "hn",
-  "Hungary": "hu",
-  "Iceland": "is",
-  "India": "in",
-  "Indonesia": "id",
-  "Iran (DC only)": "ir",
-  "Iran (UN only)": "ir",
-  "Iraq (DC only)": "iq",
-  "Iraq (UN only)": "iq",
-  "Ireland": "ie",
-  "Israel": "il",
-  "Italy": "it",
-  "Jamaica": "jm",
-  "Japan": "jp",
-  "Jordan": "jo",
-  "Kazakhstan": "kz",
-  "Kenya": "ke",
-  "Kuwait": "kw",
-  "Kyrgyzstan": "kg",
-  "Laos": "la",
-  "Latvia": "lv",
-  "Lebanon": "lb",
-  "Lesotho": "ls",
-  "Liberia": "lr",
-  "Libya": "ly",
-  "Liechtenstein": "li",
-  "Lithuania": "lt",
-  "Luxembourg": "lu",
-  "Madagascar": "mg",
-  "Malawi": "mw",
-  "Malaysia": "my",
-  "Maldives": "mv",
-  "Mali": "ml",
-  "Malta": "mt",
-  "Marshall Islands": "mh",
-  "Mauritania": "mr",
-  "Mauritius": "mu",
-  "Mexico": "mx",
-  "Micronesia": "fm",
-  "Moldova": "md",
-  "Monaco": "mc",
-  "Mongolia": "mn",
-  "Morocco": "ma",
-  "Mozambique": "mz",
-  "Myanmar": "mm",
-  "Myanmar (Burma)": "mm",
-  "Namibia": "na",
-  "Nauru": "nr",
-  "Nepal": "np",
-  "Netherlands": "nl",
-  "New Zealand": "nz",
-  "Nicaragua": "ni",
-  "Niger": "ne",
-  "Nigeria": "ng",
-  "North Korea": "kp",
-  "Norway": "no",
-  "Oman": "om",
-  "Pakistan": "pk",
-  "Palau": "pw",
-  "Panama": "pa",
-  "Papua New Guinea": "pg",
-  "Paraguay": "py",
-  "People's Republic of China": "cn",
-  "Peru": "pe",
-  "Philippines": "ph",
-  "Poland": "pl",
-  "Portugal": "pt",
-  "Qatar": "qa",
-  "Republic of Macedonia|Macedonia": "mk",
-  "Republic of the Congo": "cg",
-  "Romania": "ro",
-  "Russia": "ru",
-  "Rwanda": "rw",
-  "Saint Lucia": "lc",
-  "Saint Vincent and the Grenadines": "vc",
-  "San Marino": "sm",
-  "Sao Tome & Principe": "st",
-  "Saudi Arabia": "sa",
-  "Senegal": "sn",
-  "Seychelles": "sc",
-  "Sierra Leone": "sl",
-  "Singapore": "sg",
-  "Slovakia": "sk",
-  "Slovenia": "si",
-  "Solomon Islands": "sb",
-  "Somalia": "so",
-  "South Africa": "za",
-  "South Korea": "kr",
-  "Spain": "es",
-  "Sri Lanka": "lk",
-  "St. Kitts & Nevis": "kn",
-  "Sudan": "sd",
-  "Suriname": "sr",
-  "Swaziland": "sz",
-  "Sweden": "se",
-  "Switzerland": "ch",
-  "Syria": "sy",
-  "Tajikistan": "tj",
-  "Tanzania": "tz",
-  "Thailand": "th",
-  "Togo": "tg",
-  "Tonga": "to",
-  "Trinidad & Tobago": "tt",
-  "Tunisia": "tn",
-  "Turkey": "tr",
-  "Turkmenistan": "tm",
-  "Uganda": "ug",
-  "Ukraine": "ua",
-  "United Arab Emirates": "ae",
-  "United Kingdom": "gb",
-  "Uruguay": "uy",
-  "Uzbekistan": "uz",
-  "Vanuatu": "vu",
-  "Venezuela": "ve",
-  "Vietnam": "vn",
-  "Western Samoa": "ws",
-  "Yemen": "ye",
-  "Zaire": "cd",
-  "Zambia": "zm",
-  "Zimbabwe": "zw"
-};
-
-const roleDefs = {
-  "Consul": `<strong>Consul</strong><br>Helps citizens abroad with passports, visas, legal paperwork, and emergencies.`,
-  "Diplomat": `<strong>Diplomat</strong><br>Represents the home government in formal relations with the host country.`,
-  "Staff": `<strong>Staff</strong><br>Supports embassy or mission operations such as administration, logistics, and protocol.`,
-  "UN Diplomat": `<strong>UN Diplomat</strong><br>Represents a country in multilateral diplomacy at the United Nations.`
-};
-
-const plateInput = document.getElementById("plate");
-const unknownBox = document.getElementById("unknown-box");
-const lookupMessage = document.getElementById("lookup-message");
-const resultStack = document.getElementById("result-stack");
-const vehicleCard = document.getElementById("vehicle-card");
-const vehicleStatus = document.getElementById("vehicle-status");
-
-function normalizePlateInput(value) {
-  return String(value || "")
-    .toUpperCase()
-    .replace(/[^A-Z0-9]/g, "");
-}
-
-function extractPlateCandidateFromText(text) {
-  if (!text) return "";
-
-  const upper = String(text).toUpperCase();
-
-  const normalizeDigits = s =>
-    s.replace(/O/g, "0")
-     .replace(/Q/g, "0")
-     .replace(/I/g, "1")
-     .replace(/L/g, "1")
-     .replace(/S/g, "5");
-
-  const cleaned = upper.replace(/[^A-Z0-9]/g, "");
-
-  const candidates = [
-    cleaned.match(/([A-Z]{3})([0-9OQILS]{4})/),
-    cleaned.match(/([A-Z]{2})([0-9OQILS]{4})/),
-    cleaned.match(/([0-9OQILS]{4})([A-Z]{3})/),
-    cleaned.match(/([0-9OQILS]{4})([A-Z]{2})/)
-  ].filter(Boolean);
-
-  if (!candidates.length) return "";
-
-  const m = candidates[0];
-
-  if (/^[A-Z]/.test(m[1])) {
-    return `${m[1]}${normalizeDigits(m[2])}`;
-  }
-
-  return `${normalizeDigits(m[1])}${m[2]}`;
-}
-function extractCode(value) {
-  const cleaned = normalizePlateInput(value);
-  const lettersOnly = cleaned.replace(/[0-9]/g, "");
-
-  const knownCodes = Object.keys(mapping).sort((a, b) => b.length - a.length);
-
-  return (
-    knownCodes.find(code => cleaned.startsWith(code)) ||
-    knownCodes.find(code => cleaned.endsWith(code)) ||
-    knownCodes.find(code => lettersOnly.includes(code)) ||
-    null
-  );
-}
-
-function splitDesc(desc) {
-  const m = desc.match(/^(.+?)\s+(UN Diplomat|Consul|Diplomat|Staff)$/);
-  if (m) return { country: m[1], role: m[2] };
-  return { country: desc, role: "" };
-}
-
-function isFullPlate(value) {
-  return /\d/.test(normalizePlateInput(value));
-}
-
-function setLookupMessage(message, type) {
-  lookupMessage.textContent = message;
-  lookupMessage.className = `inline-message show ${type}`;
-}
-
-function clearLookupMessage() {
-  lookupMessage.textContent = "";
-  lookupMessage.className = "inline-message";
-}
-
-function setVehicleStatus(message, type) {
-  vehicleStatus.textContent = message;
-  vehicleStatus.className = `vehicle-status show ${type}`;
-}
-
-function clearVehicleStatus() {
-  vehicleStatus.textContent = "";
-  vehicleStatus.className = "vehicle-status";
-}
-
-function setOcrStatus(message) {
-  const el = document.getElementById("ocr-status");
-  if (el) el.textContent = message;
-}
-
-async function loadPlateData() {
-  const res = await fetch("/plates.csv");
-  if (!res.ok) throw new Error(`Could not load plates.csv: HTTP ${res.status}`);
-
-  const csv = await res.text();
-  const map = {};
-
-  csv.split(/\r?\n/)
-    .map(line => line.trim())
-    .filter(Boolean)
-    .forEach(line => {
-      const parts = line.split(",");
-      const code = parts.shift();
-      const desc = parts.join(",").trim();
-      if (code) map[code.trim().toUpperCase()] = desc;
-    });
-
-  mapping = map;
-  exampleCodes = Object.keys(mapping);
-  startExampleRotation();
-}
-
-function startExampleRotation() {
-  if (!exampleCodes.length) return;
-
-  const codeEl = document.getElementById("example-code");
-  const plateEl = document.getElementById("example-plate");
-
-  const update = () => {
-    const code = exampleCodes[Math.floor(Math.random() * exampleCodes.length)];
-    codeEl.textContent = code;
-    plateEl.textContent = `${code}0150`;
-  };
-
-  update();
-  setInterval(update, 2500);
-}
-
-function slugifyForWiki(country) {
-  return country.replace(/\s+/g, "_");
-}
-
-function slugifyForState(country) {
-  return country
-    .toLowerCase()
-    .replace(/\(.*?\)/g, "")
-    .replace(/[^a-z0-9\s-]/g, "")
-    .trim()
-    .replace(/\s+/g, "-");
-}
-
-function renderCountryLinks(country) {
-  const linksEl = document.getElementById("country-links");
-  const wikiUrl = `https://en.wikipedia.org/wiki/${encodeURIComponent(slugifyForWiki(country))}`;
-  const stateUrl = `https://www.state.gov/countries-areas/${encodeURIComponent(slugifyForState(country))}/`;
-  const newsUrl = `https://news.google.com/search?q=${encodeURIComponent(country)}`;
-
-  linksEl.innerHTML = `
-    <li><a href="${wikiUrl}" target="_blank" rel="noopener noreferrer">Wikipedia</a></li>
-    <li><a href="${stateUrl}" target="_blank" rel="noopener noreferrer">U.S. State Department</a></li>
-    <li><a href="${newsUrl}" target="_blank" rel="noopener noreferrer">Recent News</a></li>
-  `;
-}
-
-async function trackLookup(country, plateCode, missionRole) {
-  const res = await fetch("/track", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ country, plateCode, missionRole })
-  });
-
-  if (!res.ok) throw new Error(`Track lookup failed: HTTP ${res.status}`);
-  return res.json();
-}
-
-async function logUnknownCode(plateCode) {
-  try {
-    await fetch("/unknown", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ plateCode })
-    });
-  } catch (e) {
-    console.warn("Unknown logging failed", e);
-  }
-}
-
-async function saveObservation() {
-  if (!lastLookupCountry || !lastLookupPlate) {
-    setVehicleStatus("No full plate lookup is active yet.", "bad");
-    return;
-  }
-
-  const payload = {
-    country: lastLookupCountry,
-    plateCode: lastLookupPlate,
-    city: document.getElementById("obs-city").value.trim(),
-    state: document.getElementById("obs-state").value.trim(),
-    vehicleMake: document.getElementById("obs-make").value.trim(),
-    vehicleModel: document.getElementById("obs-model").value.trim(),
-    vehicleColor: document.getElementById("obs-color").value.trim()
-  };
-
-  try {
-    const res = await fetch("/observe", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    setVehicleStatus("Observation saved.", "good");
-  } catch (e) {
-    setVehicleStatus("Could not save observation right now.", "bad");
-  }
-}
-
-async function loadTopCountries() {
-  const list = document.getElementById("top-countries-list");
-
-  try {
-    const res = await fetch("/stats");
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    const rows = data.topCountries || [];
-
-    list.innerHTML = rows.length
-      ? rows.map(row => `
-          <li>
-            <span>${row.country}</span>
-            <strong>${row.query_count}</strong>
-          </li>
-        `).join("")
-      : `<li><span>No lookups yet.</span></li>`;
-  } catch (e) {
-    list.innerHTML = `<li><span>Could not load stats.</span></li>`;
-  }
-}
-
-async function loadRecentSearches() {
-  const list = document.getElementById("recent-searches-list");
-
-  try {
-    const res = await fetch("/recent");
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    const rows = data.recentSearches || [];
-
-    list.innerHTML = rows.length
-      ? rows.map(row => `
-          <li>
-            <div>
-              <div>${row.country}</div>
-              <div class="recent-meta">by ${row.searched_by || "Anonymous"}</div>
-            </div>
-          </li>
-        `).join("")
-      : `<li><span>No recent searches yet.</span></li>`;
-  } catch (e) {
-    list.innerHTML = `<li><span>Could not load recent searches.</span></li>`;
-  }
-}
-
-async function loadMe() {
-  const authEl = document.getElementById("auth-status");
-
-  try {
-    const res = await fetch("/me");
-    const data = await res.json();
-
-    if (data.loggedIn) {
-      authEl.innerHTML = `
-        Signed in as <strong>${data.username}</strong>
-        · <a href="#" id="logout-link">Logout</a>
-      `;
-      document.getElementById("logout-link").addEventListener("click", async (e) => {
-        e.preventDefault();
-        await logout();
-      });
-    } else {
-      authEl.innerHTML = `Not signed in · <a href="/login.html">Login</a>`;
-    }
-  } catch (e) {
-    authEl.textContent = "Could not load login status.";
-  }
-}
-
-async function logout() {
-  try {
-    await fetch("/logout", { method: "POST" });
-    setLookupMessage("Signed out.", "good");
-    await loadMe();
-    await loadRecentSearches();
-  } catch (e) {
-    setLookupMessage("Could not log out right now.", "bad");
-  }
-}
-
-async function enrichCountry(country, plateCode, missionRole) {
-  const flagEl = document.getElementById("flag");
-  const countEl = document.getElementById("count");
-  const factsEl = document.getElementById("facts");
-
-  const iso2 = countryToIso2[country];
-
-  if (iso2) {
-    flagEl.src = `https://flags.restcountries.com/v5/svg/${iso2}.svg`;
-    flagEl.alt = `Flag of ${country}`;
-    flagEl.style.display = "block";
-  } else {
-    flagEl.removeAttribute("src");
-    flagEl.style.display = "none";
-    console.warn(`No flag mapping available for "${country}"`);
-  }
-
-  try {
-    const track = await trackLookup(country, plateCode, missionRole);
-    const lines = [`<div><strong>Country lookups:</strong> ${track.count}</div>`];
-
-    if (track.plateCount !== null && track.plateCount !== undefined) {
-      lines.push(`<div><strong>Exact plate lookups:</strong> ${track.plateCount}</div>`);
-    }
-
-    if (track.searchedBy) {
-      lines.push(`<div><strong>Searched by:</strong> ${track.searchedBy}</div>`);
-    }
-
-    countEl.innerHTML = lines.join("");
-  } catch (e) {
-    countEl.innerHTML = `<strong>Lookup Count:</strong> Could not update lookup count right now.`;
-  }
-
-  let wikiExtract = "";
-  try {
-    const res = await fetch(
-      `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(country)}`
-    );
-
-    if (res.ok) {
-      const wiki = await res.json();
-      wikiExtract = wiki.extract || "";
-    }
-  } catch (e) {
-    console.warn("Wiki API error", e);
-  }
-
-  let html = "";
-
-  if (wikiExtract) {
-    html += `<div><strong>Summary:</strong> ${wikiExtract}</div>`;
-  }
-
-  factsEl.innerHTML = html || `<div>No country enrichment available.</div>`;
-
-  renderCountryLinks(country);
-  await loadTopCountries();
-  await loadRecentSearches();
-}
-
-async function scanPlateImage(file) {
-  if (!file) return;
-
-  setOcrStatus("Scanning image...");
-
-  try {
-    const result = await Tesseract.recognize(file, "eng", {
-      logger: () => {}
-    });
-
-    const raw = result?.data?.text || "";
-    const cleaned = extractPlateCandidateFromText(raw);
-
-    console.log("RAW OCR:", raw);
-    console.log("CLEANED OCR:", normalizePlateInput(raw));
-    console.log("PLATE CANDIDATE:", cleaned);
-
-    if (!cleaned) {
-      setOcrStatus(`Could not detect plate text. OCR read: ${normalizePlateInput(raw).slice(0, 80)}`);
-      return;
-    }
-
-    const code = extractCode(cleaned);
-    plateInput.value = cleaned;
-
-    if (!code) {
-      setOcrStatus(`Detected plate candidate: ${cleaned}. No matching code found.`);
-      return;
-    }
-
-    setOcrStatus(`Detected plate candidate: ${cleaned}. Matched code: ${code}.`);
-    await runLookup();
-
-  } catch (e) {
-    console.warn("OCR failed", e);
-    setOcrStatus("OCR failed. Check browser console for details.");
-  }
-}
-
-async function runLookup() {
-  clearLookupMessage();
-  unknownBox.classList.remove("show");
-  unknownBox.innerHTML = "";
-  resultStack.classList.remove("show");
-  vehicleCard.classList.remove("show");
-  clearVehicleStatus();
-
-  lastLookupCountry = null;
-  lastLookupPlate = null;
-
-  document.getElementById("flag").style.display = "none";
-  document.getElementById("flag").src = "";
-  document.getElementById("result").textContent = "";
-  document.getElementById("count").innerHTML = "";
-  document.getElementById("facts").innerHTML = "";
-  document.getElementById("role-def").innerHTML = "";
-  document.getElementById("country-links").innerHTML = `<li><span>Run a lookup to load country links.</span></li>`;
-
-  const raw = normalizePlateInput(plateInput.value);
-  const code = extractCode(raw);
-
-  if (!code) {
-    if (raw) await logUnknownCode(raw);
-
-    unknownBox.innerHTML = raw
-      ? `<strong>Code not found.</strong><br>This plate code is not in the current database yet. Diplomatic and mission-related plate assignments can change over time, and new codes may be issued. Your lookup has been logged for review.`
-      : `Please enter at least one letter.`;
-
-    unknownBox.classList.add("show");
-    return;
-  }
-
-  const desc = mapping[code];
-
-  if (!desc) {
-    await logUnknownCode(raw);
-    unknownBox.innerHTML = `
-      <strong>Code not found.</strong><br>
-      This plate code is not in the current database yet. Diplomatic and mission-related
-      plate assignments can change over time, and new codes may be issued. Your lookup
-      has been logged for review.
-    `;
-    unknownBox.classList.add("show");
-    return;
-  }
-
-  const { country, role } = splitDesc(desc);
-
-  document.getElementById("result").textContent = role ? `${country} (${role})` : country;
-
-  document.getElementById("role-def").innerHTML = `
-    <h2 class="section-title">Mission Role</h2>
-    <p>${role && roleDefs[role] ? roleDefs[role] : "No role description is available for this plate type."}</p>
-  `;
-
-  resultStack.classList.add("show");
-
-  await enrichCountry(country, raw, role);
-
-  if (isFullPlate(raw)) {
-    lastLookupCountry = country;
-    lastLookupPlate = raw;
-    vehicleCard.classList.add("show");
-  }
-}
-
-document.getElementById("go").addEventListener("click", runLookup);
-document.getElementById("save-observation").addEventListener("click", saveObservation);
-
-plateInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") runLookup();
-});
-
-document.getElementById("plate-image").addEventListener("change", async (e) => {
-  const file = e.target.files && e.target.files[0];
-
-  if (!file) {
-    setOcrStatus("No image selected.");
-    return;
-  }
-
-  await scanPlateImage(file);
-  e.target.value = "";
-});
-
-async function init() {
-  try {
-    await loadPlateData();
-  } catch (e) {
-    console.error("Failed to load plates.csv", e);
-    setLookupMessage("Could not load plate data.", "bad");
-  }
-
-  loadTopCountries();
-  loadRecentSearches();
-  loadMe();
-}
-
-init();
-</script>
-
+  </footer>
 </body>
 </html>

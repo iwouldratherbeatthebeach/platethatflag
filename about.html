@@ -1,107 +1,128 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>About · Flag That Plate</title>
-  <link rel="icon" type="image/png" href="/icon.png" />
-  <style>
-    :root {
-      --bg-1: #020617;
-      --bg-2: #0f172a;
-      --panel: rgba(15, 23, 42, 0.9);
-      --border: rgba(255,255,255,0.08);
-      --text: #f8fafc;
-      --muted: #cbd5e1;
-      --accent: #38bdf8;
-      --radius: 18px;
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: Inter, system-ui, Arial, sans-serif;
-      color: var(--text);
-      background:
-        radial-gradient(circle at top, rgba(56,189,248,0.14), transparent 35%),
-        linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
-      min-height: 100vh;
-    }
-
-    .wrap {
-      width: min(100%, 900px);
-      margin: 0 auto;
-      padding: 28px 16px 40px;
-    }
-
-    .nav {
-      display: flex;
-      gap: 16px;
-      margin-bottom: 18px;
-      flex-wrap: wrap;
-    }
-
-    .nav a, a {
-      color: var(--accent);
-      text-decoration: none;
-    }
-
-    .card {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 22px;
-    }
-
-    h1 {
-      margin-top: 0;
-      font-size: clamp(2rem, 4vw, 3rem);
-    }
-
-    p {
-      color: var(--muted);
-      line-height: 1.7;
-    }
-
-    footer {
-      margin-top: 20px;
-      color: var(--muted);
-      font-size: 0.95rem;
-    }
-  </style>
+  <meta name="description" content="How U.S. diplomatic license plate codes work, what Flag That Plate records when you look one up, and how to get in touch.">
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4f6f8">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0d0e10">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/icon-192.png">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Flag That Plate">
+  <meta property="og:title" content="About · Flag That Plate">
+  <meta property="og:image" content="https://platethatflag.pages.dev/assets/img/og-plate.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600&family=DM+Sans:wght@400;600;700&display=swap">
+  <link rel="stylesheet" href="/assets/css/site.css">
+  <script>(function () { try { var t = localStorage.getItem("ptf-theme"); if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); } catch (e) {} })();</script>
+  <script type="module" src="/assets/js/about.js"></script>
 </head>
 <body>
-  <div class="wrap">
-    <div class="nav">
-      <a href="/">Home</a>
-      <a href="/about.html">About</a>
-      <a href="/leaderboard.html">Leaderboard</a>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="topbar">
+    <div class="column topbar__inner">
+      <a class="brand" href="/" aria-label="Flag That Plate, home">
+        <svg class="brand__mark" viewBox="4.5 3.5 58 58.5" width="30" height="30" aria-hidden="true" focusable="false"><path class="mark__field" d="M14 11C29 6.5 43 15.5 58 11V36C43 40.5 29 31.5 14 36Z"/><path class="mark__band" d="M14 11C29 6.5 43 15.5 58 11V19.5C43 24 29 15 14 19.5Z"/><path class="mark__line" d="M14 11C29 6.5 43 15.5 58 11V36C43 40.5 29 31.5 14 36Z"/><circle class="mark__bolt" cx="20.5" cy="31" r="2.1"/><circle class="mark__bolt" cx="51.5" cy="32.4" r="2.1"/><path class="mark__pole" d="M11 9V60"/><circle class="mark__finial" cx="11" cy="6.5" r="3"/></svg>
+        <span>Flag That Plate</span>
+      </a>
+      <nav class="nav" aria-label="Main">
+        <a href="/">Decode</a>
+        <a href="/leaderboard.html">Leaderboard</a>
+        <a href="/about.html" aria-current="page">About</a>
+      </nav>
+      <div class="account" data-account></div>
+      <button class="btn btn--quiet btn--icon menu-button" type="button" aria-expanded="false" aria-controls="menu-sheet" aria-label="Open menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+    <div class="sheet" id="menu-sheet">
+      <nav class="nav" aria-label="Main">
+        <a href="/">Decode</a>
+        <a href="/leaderboard.html">Leaderboard</a>
+        <a href="/about.html" aria-current="page">About</a>
+      </nav>
+      <div class="sheet__account" data-account-sheet></div>
+    </div>
+  </header>
+  <div class="scrim" data-scrim></div>
+
+  <main id="main" class="column">
+    <div class="page-head">
+      <h1 class="title">About Flag That Plate</h1>
+      <p class="lead">An independent reference for the diplomatic license plates issued in the United States, and a log of the ones people spot.</p>
     </div>
 
-    <div class="card">
-      <h1>About Flag That Plate</h1>
-      <p>
-        Flag That Plate was created out of interest in diplomatic license plates and the
-        countries and mission roles they represent. It is an independent reference and
-        observation project intended for educational and informational use.
-      </p>
-      <p>
-        The site logs lookup activity to improve the plate database over time. Unknown codes
-        may be reviewed and added as new plate assignments are observed.
-      </p>
-      <p>
-        Contact: <a href="mailto:flagthatplate@gmail.com">flagthatplate@gmail.com</a>
-      </p>
-      <p>
-        Unless otherwise noted, site content is shared under the
-        <strong>Creative Commons Attribution 4.0 International</strong> license.
-      </p>
-    </div>
+    <div class="about">
+      <article class="panel prose">
+        <h2>What it is</h2>
+        <p>Flag That Plate was created out of interest in diplomatic license plates and the countries and mission roles they represent. It is an independent reference and observation project intended for educational and informational use. It is not affiliated with the U.S. Department of State.</p>
+        <p>The site logs lookup activity to improve the plate database over time. Unknown codes may be reviewed and added as new plate assignments are observed.</p>
 
-    <footer>
-      © Flag That Plate · Creative Commons Attribution 4.0
-    </footer>
-  </div>
+        <h2>How the codes work</h2>
+        <p>Diplomatic plates in the United States are issued by the State Department's Office of Foreign Missions. Each country or organization has a two-letter code, and the plate list here has <span data-code-count>213</span> of them. A letter before the code gives the holder's role, a D after it marks a diplomat at the United Nations, and the numbers are the plate's serial.</p>
+        <div class="table-wrap">
+          <table class="code-table">
+            <caption class="sr-only">How plates for Japan, country code AF, are read</caption>
+            <thead>
+              <tr><th scope="col">Plate</th><th scope="col">Role letter</th><th scope="col">Country code</th><th scope="col">Means</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>DAF 0789</td><td>D, before the code</td><td>AF</td><td>A diplomat from Japan</td></tr>
+              <tr><td>CAF 0789</td><td>C, before the code</td><td>AF</td><td>A consul from Japan</td></tr>
+              <tr><td>SAF 0789</td><td>S, before the code</td><td>AF</td><td>Embassy or mission staff from Japan</td></tr>
+              <tr><td>AFD 0789</td><td>D, after the code</td><td>AF</td><td>A Japanese diplomat at the United Nations</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>A few codes are listed for two missions. QX, for example, appears for both Pakistan and Iran (DC only): Iran's interests in Washington are represented through Pakistan's embassy. The decoder names both when that happens.</p>
+
+        <h2>What we record</h2>
+        <p>When you look up a plate, the site records the country, the plate you typed and the time, together with a one-way hash of your IP address, your browser's user agent, the country your connection comes from, and your username if you're signed in. Codes it doesn't recognize are logged for review, and a vehicle sighting stores the details you enter. These events may also be sent to the site's operational monitoring.</p>
+
+        <h2>License</h2>
+        <p>Unless otherwise noted, site content is shared under the <a class="link" href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">Creative Commons Attribution 4.0 International</a> license. Country summaries come from Wikipedia under CC BY-SA 4.0.</p>
+
+        <h2>Contact</h2>
+        <p>Write to <a class="link" href="mailto:flagthatplate@gmail.com">flagthatplate@gmail.com</a> with corrections, new codes or questions.</p>
+      </article>
+
+      <aside class="rail" aria-label="Example plate">
+        <figure class="panel" style="display:grid;gap:16px">
+          <div class="plate" aria-hidden="true">
+            <div class="plate__face">
+              <div class="plate__band">Diplomat</div>
+              <div class="plate__chars">DAF 0789</div>
+              <div class="plate__foot"><span class="plate__bolt"></span><span class="plate__bolt"></span></div>
+            </div>
+          </div>
+          <figcaption class="muted">A diplomat's plate: D for diplomat, AF for Japan, 0789 for its serial.</figcaption>
+          <a class="btn btn--primary" href="/">Decode a plate</a>
+        </figure>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="column footer__inner">
+      <span class="footer__brand"><svg class="brand__mark brand__mark--small" viewBox="4.5 3.5 58 58.5" width="24" height="24" aria-hidden="true" focusable="false"><path class="mark__field" d="M14 11C29 6.5 43 15.5 58 11V36C43 40.5 29 31.5 14 36Z"/><path class="mark__band" d="M14 11C29 6.5 43 15.5 58 11V19.5C43 24 29 15 14 19.5Z"/><path class="mark__line" d="M14 11C29 6.5 43 15.5 58 11V36C43 40.5 29 31.5 14 36Z"/><circle class="mark__bolt" cx="20.5" cy="31" r="2.1"/><circle class="mark__bolt" cx="51.5" cy="32.4" r="2.1"/><path class="mark__pole" d="M11 9V60"/><circle class="mark__finial" cx="11" cy="6.5" r="3"/></svg>Flag That Plate</span>
+      <span class="footer__links">
+        <span>Content under <a class="link" href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC BY 4.0</a></span>
+        <a class="link" href="mailto:flagthatplate@gmail.com">flagthatplate@gmail.com</a>
+      </span>
+      <div class="footer__end">
+        <div class="segmented" role="group" aria-label="Theme" data-theme-switch>
+          <button type="button" data-value="system" aria-pressed="true">System</button>
+          <button type="button" data-value="light" aria-pressed="false">Light</button>
+          <button type="button" data-value="dark" aria-pressed="false">Dark</button>
+        </div>
+      </div>
+    </div>
+  </footer>
 </body>
-</html> 
+</html>

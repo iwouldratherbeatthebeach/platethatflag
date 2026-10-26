@@ -1,3 +1,5 @@
+import { forward } from "./_lib/splunk.js";
+
 async function sha256Hex(value) {
   const data = new TextEncoder().encode(value);
   const digest = await crypto.subtle.digest("SHA-256", data);
@@ -42,10 +44,20 @@ export async function onRequestPost(context) {
       .bind(plateCode, ipCountry, hashedIp, userAgent)
       .run();
 
+    // Splunk HEC: sent in the background (waitUntil); never delays or changes this response
+    forward(context, "unknown_plate", {
+      plate: plateCode,
+      src_country: ipCountry,
+      src_ip_hash: hashedIp,
+      http_user_agent: userAgent,
+      status: 200
+    });
+
     return new Response(JSON.stringify({ ok: true }), {
       headers: { "Content-Type": "application/json" }
     });
   } catch (error) {
+    forward(context, "error", { status: 500, error: String(error) });
     return new Response(JSON.stringify({
       ok: false,
       error: "Server error",

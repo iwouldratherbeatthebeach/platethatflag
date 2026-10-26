@@ -1,4 +1,5 @@
 import { getUserFromRequest } from "./_lib/auth.js";
+import { forward } from "./_lib/splunk.js";
 
 async function sha256Hex(value) {
   const data = new TextEncoder().encode(value);
@@ -68,10 +69,29 @@ export async function onRequestPost(context) {
       )
       .run();
 
+    // Splunk HEC: sent in the background (waitUntil); never delays or changes this response
+    forward(context, "sighting", {
+      country,
+      plate: plateCode,
+      city,
+      state,
+      vehicle_make: vehicleMake,
+      vehicle_model: vehicleModel,
+      vehicle_color: vehicleColor,
+      user: user?.username,
+      user_id: user?.id,
+      anonymous: !user,
+      src_country: ipCountry,
+      src_ip_hash: hashedIp,
+      http_user_agent: userAgent,
+      status: 200
+    });
+
     return new Response(JSON.stringify({ ok: true }), {
       headers: { "Content-Type": "application/json" }
     });
   } catch (error) {
+    forward(context, "error", { status: 500, error: String(error) });
     return new Response(JSON.stringify({
       ok: false,
       error: "Server error",

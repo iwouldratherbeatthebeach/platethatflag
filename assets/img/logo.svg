@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="4.5 3.5 58 58.5" width="58" height="58.5">
+  <title>Flag That Plate</title>
+  <path d="M14 11C29 6.5 43 15.5 58 11V36C43 40.5 29 31.5 14 36Z" fill="#a9dae8"/>
+  <path d="M14 11C29 6.5 43 15.5 58 11V19.5C43 24 29 15 14 19.5Z" fill="#a80c28"/>
+  <path d="M14 11C29 6.5 43 15.5 58 11V36C43 40.5 29 31.5 14 36Z" fill="none" stroke="#15181b" stroke-width="3" stroke-linejoin="round"/>
+  <circle cx="20.5" cy="31" r="2.1" fill="#fff"/>
+  <circle cx="51.5" cy="32.4" r="2.1" fill="#fff"/>
+  <path d="M11 9V60" fill="none" stroke="#15181b" stroke-width="3.5" stroke-linecap="round"/>
+  <circle cx="11" cy="6.5" r="3" fill="#15181b"/>
+</svg>

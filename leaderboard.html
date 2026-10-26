@@ -1,202 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Leaderboard · Flag That Plate</title>
-  <link rel="icon" type="image/png" href="/icon.png" />
-
-  <style>
-    :root {
-      --bg-1: #020617;
-      --bg-2: #0f172a;
-      --panel: rgba(15, 23, 42, 0.9);
-      --border: rgba(255,255,255,0.08);
-      --text: #f8fafc;
-      --muted: #cbd5e1;
-      --accent: #38bdf8;
-      --radius: 18px;
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: Inter, system-ui, Arial, sans-serif;
-      color: var(--text);
-      background:
-        radial-gradient(circle at top, rgba(56,189,248,0.14), transparent 35%),
-        linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
-      min-height: 100vh;
-    }
-
-    .wrap {
-      width: min(100%, 1120px);
-      margin: 0 auto;
-      padding: 24px 16px 40px;
-    }
-
-    .nav {
-      display: flex;
-      justify-content: flex-end;
-      gap: 16px;
-      margin-bottom: 10px;
-      flex-wrap: wrap;
-    }
-
-    .nav a {
-      color: var(--accent);
-      text-decoration: none;
-    }
-
-    .hero {
-      text-align: center;
-      margin-bottom: 18px;
-    }
-
-    .hero h1 {
-      margin: 0 0 12px;
-      font-size: clamp(2.2rem, 4.5vw, 3.4rem);
-    }
-
-    .hero p {
-      color: var(--muted);
-      max-width: 720px;
-      margin: 0 auto;
-      line-height: 1.6;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 18px;
-    }
-
-    .card {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 18px;
-    }
-
-    h2 {
-      margin-top: 0;
-      font-size: 1.1rem;
-    }
-
-    ul {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-    }
-
-    li {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 10px 0;
-      border-bottom: 1px solid var(--border);
-      color: var(--muted);
-    }
-
-    li:last-child {
-      border-bottom: 0;
-    }
-
-    strong {
-      color: var(--text);
-    }
-
-    .subtle {
-      color: var(--muted);
-    }
-
-    @media (max-width: 980px) {
-      .grid {
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
+  <meta name="description" content="The countries people look up most on Flag That Plate, the vehicles spotters log, and the spotters with the most lookups.">
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4f6f8">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0d0e10">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/icon-192.png">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Flag That Plate">
+  <meta property="og:title" content="Leaderboard · Flag That Plate">
+  <meta property="og:image" content="https://platethatflag.pages.dev/assets/img/og-plate.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600&family=DM+Sans:wght@400;600;700&display=swap">
+  <link rel="stylesheet" href="/assets/css/site.css">
+  <script>(function () { try { var t = localStorage.getItem("ptf-theme"); if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); } catch (e) {} })();</script>
+  <script type="module" src="/assets/js/leaderboard.js"></script>
 </head>
 <body>
-  <div class="wrap">
-    <div class="nav">
-      <a href="/">Home</a>
-      <a href="/about.html">About</a>
-      <a href="/leaderboard.html">Leaderboard</a>
+  <a class="skip-link" href="#main">Skip to the leaderboard</a>
+
+  <header class="topbar">
+    <div class="column topbar__inner">
+      <a class="brand" href="/" aria-label="Flag That Plate, home">
+        <svg class="brand__mark" viewBox="4.5 3.5 58 58.5" width="30" height="30" aria-hidden="true" focusable="false"><path class="mark__field" d="M14 11C29 6.5 43 15.5 58 11V36C43 40.5 29 31.5 14 36Z"/><path class="mark__band" d="M14 11C29 6.5 43 15.5 58 11V19.5C43 24 29 15 14 19.5Z"/><path class="mark__line" d="M14 11C29 6.5 43 15.5 58 11V36C43 40.5 29 31.5 14 36Z"/><circle class="mark__bolt" cx="20.5" cy="31" r="2.1"/><circle class="mark__bolt" cx="51.5" cy="32.4" r="2.1"/><path class="mark__pole" d="M11 9V60"/><circle class="mark__finial" cx="11" cy="6.5" r="3"/></svg>
+        <span>Flag That Plate</span>
+      </a>
+      <nav class="nav" aria-label="Main">
+        <a href="/">Decode</a>
+        <a href="/leaderboard.html" aria-current="page">Leaderboard</a>
+        <a href="/about.html">About</a>
+      </nav>
+      <div class="account" data-account></div>
+      <button class="btn btn--quiet btn--icon menu-button" type="button" aria-expanded="false" aria-controls="menu-sheet" aria-label="Open menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+    <div class="sheet" id="menu-sheet">
+      <nav class="nav" aria-label="Main">
+        <a href="/">Decode</a>
+        <a href="/leaderboard.html" aria-current="page">Leaderboard</a>
+        <a href="/about.html">About</a>
+      </nav>
+      <div class="sheet__account" data-account-sheet></div>
+    </div>
+  </header>
+  <div class="scrim" data-scrim></div>
+
+  <main id="main" class="column">
+    <div class="page-head">
+      <h1 class="title">Leaderboard</h1>
+      <p class="lead">The countries people look up most, the vehicles spotters log, and the spotters with the most lookups.</p>
     </div>
 
-    <div class="hero">
-      <h1>Leaderboard</h1>
-      <p>
-        See the most searched countries, most observed vehicle types, and top contributors.
-      </p>
+    <div class="boards">
+      <section class="panel" aria-labelledby="countries-title">
+        <div class="panel__head">
+          <h2 class="section-title" id="countries-title">Most looked-up countries</h2>
+          <span class="panel__meta">Top 10 · lookups</span>
+        </div>
+        <ol class="ranking" data-countries></ol>
+        <p class="panel__foot">Every lookup on the decoder counts. <a class="link" href="/">Decode a plate</a></p>
+      </section>
+
+      <section class="panel" aria-labelledby="vehicles-title">
+        <div class="panel__head">
+          <h2 class="section-title" id="vehicles-title">Most logged vehicles</h2>
+          <span class="panel__meta">Top 10 · sightings</span>
+        </div>
+        <ol class="rows" data-vehicles></ol>
+        <p class="panel__foot">Look up a full plate to log the car you saw. <a class="link" href="/">Log a sighting</a></p>
+      </section>
+
+      <section class="panel" aria-labelledby="spotters-title">
+        <div class="panel__head">
+          <h2 class="section-title" id="spotters-title">Top spotters</h2>
+          <span class="panel__meta">Top 10 · lookups</span>
+        </div>
+        <ol class="rows" data-spotters></ol>
+        <p class="panel__foot" data-spotters-foot>Lookups you make while signed in count here. <a class="link" href="/login.html">Sign in</a></p>
+      </section>
     </div>
+  </main>
 
-    <div class="grid">
-      <div class="card">
-        <h2>Top Countries</h2>
-        <ul id="top-countries">
-          <li><span>Loading...</span></li>
-        </ul>
-      </div>
-
-      <div class="card">
-        <h2>Most Common Vehicle Types</h2>
-        <ul id="top-vehicles">
-          <li><span>Loading...</span></li>
-        </ul>
-      </div>
-
-      <div class="card">
-        <h2>Top Submitters</h2>
-        <ul id="top-submitters">
-          <li><span>Loading...</span></li>
-        </ul>
+  <footer class="footer">
+    <div class="column footer__inner">
+      <span class="footer__brand"><svg class="brand__mark brand__mark--small" viewBox="4.5 3.5 58 58.5" width="24" height="24" aria-hidden="true" focusable="false"><path class="mark__field" d="M14 11C29 6.5 43 15.5 58 11V36C43 40.5 29 31.5 14 36Z"/><path class="mark__band" d="M14 11C29 6.5 43 15.5 58 11V19.5C43 24 29 15 14 19.5Z"/><path class="mark__line" d="M14 11C29 6.5 43 15.5 58 11V36C43 40.5 29 31.5 14 36Z"/><circle class="mark__bolt" cx="20.5" cy="31" r="2.1"/><circle class="mark__bolt" cx="51.5" cy="32.4" r="2.1"/><path class="mark__pole" d="M11 9V60"/><circle class="mark__finial" cx="11" cy="6.5" r="3"/></svg>Flag That Plate</span>
+      <span class="footer__links">
+        <span>Content under <a class="link" href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC BY 4.0</a></span>
+        <a class="link" href="mailto:flagthatplate@gmail.com">flagthatplate@gmail.com</a>
+      </span>
+      <div class="footer__end">
+        <div class="segmented" role="group" aria-label="Theme" data-theme-switch>
+          <button type="button" data-value="system" aria-pressed="true">System</button>
+          <button type="button" data-value="light" aria-pressed="false">Light</button>
+          <button type="button" data-value="dark" aria-pressed="false">Dark</button>
+        </div>
       </div>
     </div>
-  </div>
-
-  <script>
-    async function loadLeaderboard() {
-      try {
-        const res = await fetch("/api/leaderboard");
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-
-        const countriesEl = document.getElementById("top-countries");
-        const vehiclesEl = document.getElementById("top-vehicles");
-        const submittersEl = document.getElementById("top-submitters");
-
-        const topCountries = data.topCountries || [];
-        const topVehicles = data.topVehicles || [];
-        const topSubmitters = data.topSubmitters || [];
-
-        countriesEl.innerHTML = topCountries.length
-          ? topCountries.map(row => `
-              <li><span>${row.country}</span><strong>${row.searches}</strong></li>
-            `).join("")
-          : `<li><span class="subtle">No data yet.</span></li>`;
-
-        vehiclesEl.innerHTML = topVehicles.length
-          ? topVehicles.map(row => `
-              <li><span>${row.vehicle_make} ${row.vehicle_model}</span><strong>${row.observations}</strong></li>
-            `).join("")
-          : `<li><span class="subtle">No data yet.</span></li>`;
-
-        submittersEl.innerHTML = topSubmitters.length
-          ? topSubmitters.map(row => `
-              <li><span>${row.username}</span><strong>${row.submissions}</strong></li>
-            `).join("")
-          : `<li><span class="subtle">No data yet.</span></li>`;
-      } catch (e) {
-        document.getElementById("top-countries").innerHTML = `<li><span class="subtle">Could not load leaderboard.</span></li>`;
-        document.getElementById("top-vehicles").innerHTML = `<li><span class="subtle">Could not load leaderboard.</span></li>`;
-        document.getElementById("top-submitters").innerHTML = `<li><span class="subtle">Could not load leaderboard.</span></li>`;
-      }
-    }
-
-    loadLeaderboard();
-  </script>
+  </footer>
 </body>
 </html>
