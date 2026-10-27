@@ -6,7 +6,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { parsePlates } from "../assets/js/plates.js";
 import {
-  plateCandidates, mergeCandidates, isConfident, CONFIDENT, otsu, adaptiveMask, blobs, mainStrokes, findPlateLines
+  plateCandidates, mergeCandidates, isConfident, CONFIDENT, otsu, adaptiveMask, blobs, mainStrokes, findPlateLines,
+  plateColourSpots
 } from "../assets/js/reader.js";
 
 const index = parsePlates(readFileSync(new URL("../plates.csv", import.meta.url), "utf8"));
@@ -33,6 +34,60 @@ test("stray marks around the plate and in the gap are skipped", () => {
 test("three-digit plates read as they are", () => {
   assert.equal(best("DJZ832"), "DJZ832");
   assert.equal(best("CD\nDJZ832"), "DJZ832");
+});
+
+test("plates with the serial first read as they are (UN plates in New York)", () => {
+  assert.equal(best("1034CYD"), "1034CYD");
+  assert.equal(best("1034 CYD"), "1034CYD");
+  assert.equal(best("IO34CYD"), "1034CYD"); // I and O read for 1 and 0 in the serial (was IO 340)
+  assert.equal(best("1034CY0"), "1034CYD"); // the UN's D read as 0
+  assert.equal(best("NEW YORK CITY\n1034 CYD\nSILVER STAR"), "1034CYD"); // frame text around it
+  // letters first still wins where it fits: the trailing-D fix only applies after a serial
+  assert.equal(best("DLO416"), "DL0416");
+});
+
+test("two-digit serials read as they are, and only from real digits", () => {
+  assert.equal(best("DTG76"), "DTG76");
+  assert.equal(best("DTG 76"), "DTG76");
+  assert.equal(best("SP036"), "SPD36"); // the D of SPD read as 0
+  assert.equal(best("DN404"), "DNA04"); // the A read as 4
+  assert.equal(best("DIPLOMAT"), ""); // the band is not DJP 10
+});
+
+test("a look-alike letter is swapped only into a listed code, and only as a guess", () => {
+  const read = (text) => plateCandidates(text, index, { confidence: 95 });
+  assert.equal(best("DIB0215"), "DJB0215"); // J read as I
+  assert.equal(best("SYF0283"), "SVF0283"); // V read as Y
+  assert.equal(best("DLN0965"), "DLN0965"); // LN isn't listed, but nothing is swapped into it
+  const twice = mergeCandidates([read("DIB0215"), read("DIB0215")]);
+  assert.equal(twice[0].plate, "DJB0215");
+  assert.equal(twice[0].guess, true);
+  assert.equal(isConfident(twice[0]), false, "a guess is never looked up without asking");
+});
+
+test("reads that disagree on the serial are not clear", () => {
+  const read = (text) => plateCandidates(text, index, { confidence: 70 });
+  // three drawings read 9115 as I115, one read it right and scored higher
+  const merged = mergeCandidates([read("DRLI115"), read("DRLI115"), read("DRL9115"), read("DRLI115")]);
+  assert.equal(merged[0].contested, true);
+  assert.equal(isConfident(merged[0]), false);
+});
+
+test("the plate's colours point at where it is", () => {
+  // a grey street, a dark car, and a small plate: pale blue under a crimson band
+  const W = 480, H = 320;
+  const rgba = new Uint8ClampedArray(W * H * 4);
+  const paint = (x0, y0, x1, y1, [r, g, b]) => {
+    for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) { const p = (y * W + x) * 4; rgba[p] = r; rgba[p + 1] = g; rgba[p + 2] = b; rgba[p + 3] = 255; }
+  };
+  paint(0, 0, W, H, [128, 130, 133]);
+  paint(80, 120, 400, 300, [30, 32, 36]);
+  paint(300, 238, 340, 244, [168, 12, 40]); // the band
+  paint(300, 244, 340, 258, [169, 218, 232]); // the field
+  paint(20, 20, 200, 60, [120, 160, 230]); // a strong blue sign, too saturated to be a plate
+  const [spot] = plateColourSpots(rgba, W, H);
+  assert.ok(spot, "a spot was found");
+  assert.ok(Math.abs(spot.x - 320 / W) < 0.03 && Math.abs(spot.y - 251 / H) < 0.04, JSON.stringify(spot));
 });
 
 test("small print never turns into a confident plate", () => {

@@ -59,19 +59,29 @@ loaded on first use). The photo never leaves the device.
 Tesseract run on a whole photo reads the small print and misses the plate, so `assets/js/reader.js`
 first finds the plate's row of characters (an adaptive threshold, blobs shaped like characters, rows
 of 4 to 12 of them), turns the photo so the row is level, redraws only those characters black on
-white and reads that as one line, in up to five drawings. What it reads becomes plate candidates
-(2 or 3 letters, then 3 or 4 digits, with O/0, I/1, B/8, S/5 and Z/2 fixed by position), scored
-higher when the code is in `plates.csv`.
+white and reads that as one line, in up to five drawings. What it reads becomes plate candidates,
+scored higher when the code is in `plates.csv`:
 
-- A clear reading (one read scores at least `CONFIDENT` and two drawings put it first) fills in the
-  plate and looks it up. Anything less fills in the plate and asks the visitor to check it, with up
-  to two other readings to pick from; nothing is counted until they look it up.
+- 3 letters and 2 to 4 digits (`DCY 0477`, `DJZ 832`, `DTG 76`), the serial first as on UN plates
+  in New York (`1034 CYD`), or 2 letters when a separately boxed role letter was missed;
+- O/0, I/1, B/8, S/5 and Z/2 fixed by position, a misread role letter fixed when that gives a listed
+  code, and J, T or V read as I or Y swapped back, but only as a guess (`plates.csv` is not complete,
+  so a wider swap turns real unlisted codes, such as LN, into listed wrong ones).
+
+If the whole photo gives nothing, the reader looks for the plate's pale blue and crimson and reads
+up to three such spots up close, which finds plates that are small in a photo of a whole car.
+
+- A clear reading (one read scores at least `CONFIDENT`, two drawings put it first, no other reading
+  comes within `RIVAL_MARGIN`, and nothing was guessed) fills in the plate and looks it up. Anything
+  less fills in the plate and asks the visitor to check it, with up to two other readings to pick
+  from; nothing is counted until they look it up. Readings under `FLOOR` are treated as no plate.
 - When the plate isn't found, tapping it in the photo reads that part of the photo at a higher
   resolution.
-- Measured in Chrome on 8 photos of real plates and 20 harder versions of them (turned up to 10°,
-  as small as a ninth of the width of a busy scene, blurred, saved as low-quality JPEG): 6 of 8 and
-  13 of 20 read exactly, and no wrong reading was looked up without asking. Plates whose role letter
-  sits in its own box come back without it (`DL 0416` for `D DL 0416`).
+- Measured in Chrome on 192 Wikimedia Commons street photos of diplomatic cars around Washington,
+  100 of them with a legible diplomatic plate: 64 read exactly (41 before these changes), 27 looked
+  up without asking, and 1 of those wrong (`DJM 1098` read as `DJH 1098`, also a listed code). Each
+  photo took 0.2 s at the median and under 0.8 s at most, after the reader had loaded.
+- Plates whose role letter sits in its own box (the 2007 design) are not read; type those.
 
 `functions/ocr.js` (Google Cloud Vision, needs `GOOGLE_VISION_API_KEY`) is still in the repository,
 but no page calls it.
@@ -208,6 +218,9 @@ index=platethatflag event_type=sighting | stats count by vehicle_make, vehicle_m
   only brand hue: full strength on the primary button, the rank bars and the active nav item, pale
   tints of it on areas. Light and dark themes follow the system and can be set in the footer.
 - Type: DM Sans for everything, Barlow Condensed only for the plate's characters.
+- The plate is the text field. Until something is typed it shows the example with a caret in front
+  of it. The caret blinks five times when the page opens (WCAG 2.2.2 allows 5 s), blinks while the
+  plate has focus, and stays still under reduced motion. A press anywhere on the plate focuses it.
 - The logo is the plate flying as a flag. Each page carries it inline in the header and footer, so
   its outline takes the text colour in light and dark; the favicons use the crimson tile.
 - Motion tokens (`--ease-out`, `--ease-in-out`, `--ease-drawer`, `--dur-*`) follow the

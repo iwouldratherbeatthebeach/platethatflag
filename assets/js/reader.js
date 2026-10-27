@@ -10,9 +10,12 @@
 //      inside its own box and redraw only its strokes, black on white. Read that as one line of
 //      A-Z and 0-9, in up to five drawings (sizes, widths, soft edges), because Tesseract's mistakes
 //      change with the drawing.
-//   3. Turn what was read into plate candidates (2-3 letters and 3-4 digits, fixing O/0, I/1, B/8,
-//      S/5 and Z/2 by position) and score them, highest when the code exists in plates.csv. A plate
-//      is only called clear when it scores high and two drawings put it first.
+//   3. Turn what was read into plate candidates (2-3 letters and 2-4 digits, either way round,
+//      fixing O/0, I/1, B/8, S/5 and Z/2 by position) and score them, highest when the code exists
+//      in plates.csv. A plate is only called clear when it scores high, two drawings put it first
+//      and no other reading comes close.
+//   4. If the whole photo gives nothing usable, find spots with the plate's pale blue and crimson
+//      and read those up close: a plate is often too small to find in a photo of a whole car.
 //
 // The image work is plain JavaScript on canvas pixels; tesseract.js is the only library and loads
 // on first use. Nothing leaves the browser.
@@ -25,15 +28,27 @@ const ALPHANUM = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 // Characters OCR mixes up, mapped to what they must be at a letter or a digit position.
 const AS_LETTER = { 0: "O", 1: "I", 2: "Z", 4: "A", 5: "S", 6: "G", 7: "T", 8: "B" };
 const AS_DIGIT = { O: "0", Q: "0", D: "0", U: "0", C: "0", I: "1", L: "1", J: "1", T: "7", Z: "2", S: "5", B: "8", G: "6", A: "4" };
-// The first of three letters is usually the role letter: D, C or S.
+// The first of three letters is usually the role letter: D, C or S. UN plates put a D last.
 const AS_ROLE = { O: "D", 0: "D", Q: "D", G: "C", 6: "C", 5: "S" };
+const AS_UN_ROLE = { O: "D", 0: "D", Q: "D" };
+// Letters the reader confuses on plates: J and T read as I, V read as Y (seen on real DC plates).
+// A code that isn't listed is tried again with one of them swapped, and kept if that makes a
+// listed code. Only these: plates.csv is not complete (LN, on many DC plates, is missing), so a
+// wider swap turns real, unlisted codes into listed wrong ones (DLN into DLM). A swapped reading
+// is a guess and is never looked up without asking.
+const LOOKALIKE = { I: "JT", Y: "V" };
+const SWAP_COST = 10;
 // What a fix costs: shapes that are nearly the same in plate lettering are cheap to swap.
 const FIX_COST = { O: 4, 0: 4, Q: 6, D: 6, I: 6, 1: 6, L: 8, B: 10, 8: 10, S: 10, 5: 10, Z: 10, 2: 10, G: 10, 6: 10 };
 const fixCost = (ch) => FIX_COST[ch] ?? 14;
 
-// How common each layout is: 3 letters + 4 digits today, 3 + 3 on older and motorcycle plates,
-// 2 letters only when a separately boxed role letter was missed.
-const LAYOUT = { "3+4": 30, "3+3": 24, "2+4": 12, "2+3": 6 };
+// How common each layout is. Letters first: 3 letters + 4 digits today, 3 + 3 on older and
+// motorcycle plates, 3 + 2 on low serials (DTG 76), 2 letters only when a separately boxed role
+// letter was missed. Serial first: 4 digits + 3 letters, as on UN plates in New York (1034 CYD).
+const LAYOUT = {
+  letters: { "3+4": 30, "3+3": 24, "3+2": 16, "2+4": 12, "2+3": 6 },
+  serial: { "4+3": 28, "3+3": 20, "4+2": 10, "3+2": 4 }
+};
 
 /**
  * How a row is redrawn for each read: character height in px, horizontal stretch, soft edges.
@@ -53,6 +68,12 @@ export const VARIANTS = [
  * without asking. Clear real reads score about 100; the best wrong reads seen in testing, 80.
  */
 export const CONFIDENT = 86;
+
+/**
+ * Readings that score below this are noise, not plates: on 192 street photos of diplomatic cars,
+ * every right reading scored 56 or more, and signs, grilles and fences mostly under 45.
+ */
+export const FLOOR = 45;
 
 function fixed(chars, kind) {
   let subs = 0;
@@ -86,15 +107,35 @@ function codeScore(letters, index) {
   return 0;
 }
 
-/** Letter readings to try: as read (digits fixed to letters), and with the first one as a role letter. */
-function letterReadings(chars, index) {
+/**
+ * Letter readings to try: as read (digits fixed to letters), and, when that makes a listed code,
+ * with a misread role letter fixed (the first, D, C or S, before a serial; the UN's trailing D
+ * after one, as in 1034 CYD), or one look-alike letter swapped (DIB 0215 -> DJB).
+ */
+function letterReadings(chars, index, { serialFirst = false } = {}) {
   const plain = fixed(chars, "letter");
   const out = plain ? [plain] : [];
-  if (chars.length === 3 && AS_ROLE[chars[0]]) {
+  if (chars.length !== 3 || !plain) return out;
+  const listed = (text) => Boolean(index?.map?.has(text));
+  const add = (text, subs, cost) => {
+    if (listed(text) && !out.some((o) => o.text === text)) out.push({ text, subs, cost });
+  };
+  if (!serialFirst && AS_ROLE[chars[0]]) {
     const rest = fixed(chars.slice(1), "letter");
-    if (rest) {
-      const text = AS_ROLE[chars[0]] + rest.text;
-      if (index?.map?.has(text)) out.push({ text, subs: rest.subs + 1, cost: rest.cost + fixCost(chars[0]) });
+    if (rest) add(AS_ROLE[chars[0]] + rest.text, rest.subs + 1, rest.cost + fixCost(chars[0]));
+  }
+  if (serialFirst && AS_UN_ROLE[chars[2]]) {
+    const rest = fixed(chars.slice(0, 2), "letter");
+    if (rest) add(rest.text + AS_UN_ROLE[chars[2]], rest.subs + 1, rest.cost + fixCost(chars[2]));
+  }
+  if (!listed(plain.text)) {
+    for (let i = 0; i < 3; i++) {
+      // a zero in a letter's place can be a D or a C as well as an O (SPD 36 read as SP0 36)
+      const swaps = (chars[i] === "0" ? "DC" : "") + (LOOKALIKE[plain.text[i]] || "");
+      for (const swap of swaps) {
+        const text = plain.text.slice(0, i) + swap + plain.text.slice(i + 1);
+        if (listed(text) && !out.some((o) => o.text === text)) out.push({ text, subs: plain.subs + 1, cost: plain.cost + SWAP_COST, guess: true });
+      }
     }
   }
   return out;
@@ -103,9 +144,10 @@ function letterReadings(chars, index) {
 /**
  * Plate candidates in a piece of OCR text, best first.
  * Diplomatic plates read as 2-3 letters then 3-4 digits (DCY 0477, DJZ 832, and DL 0416 when the
- * separate role letter is missed). Every run of 5-7 characters on a line is tried with each split,
- * characters are fixed by position (each fix costs), and the result is scored: layout, whether the
- * code exists in plates.csv, how much of the line it explains, and Tesseract's confidence.
+ * separate role letter is missed), or serial first, as on UN plates in New York (1034 CYD). Every
+ * run of 5-7 characters on a line is tried both ways round with each split, characters are fixed by
+ * position (each fix costs), and the result is scored: layout, whether the code exists in
+ * plates.csv, how much of the line it explains, and Tesseract's confidence.
  */
 export function plateCandidates(text, index, { confidence = 0, bonus = 0 } = {}) {
   const found = new Map();
@@ -117,28 +159,41 @@ export function plateCandidates(text, index, { confidence = 0, bonus = 0 } = {})
 
   for (const line of lines) {
     for (let start = 0; start < line.length; start++) {
-      for (const letterCount of [3, 2]) {
-        // gap = 1 skips one stray mark read in the space between the letters and the digits
-        for (const gap of [0, 1]) {
-          for (const digitCount of [4, 3]) {
-            const end = start + letterCount + gap + digitCount;
-            if (end > line.length) continue;
-            const digits = fixed(line.slice(start + letterCount + gap, end), "digit");
-            if (!digits) continue;
-            for (const letters of letterReadings(line.slice(start, start + letterCount), index)) {
-              const plate = letters.text + digits.text;
-              const extra = line.length - (end - start);
-              const score = Math.round(
-                LAYOUT[`${letterCount}+${digitCount}`] +
-                  codeScore(letters.text, index) -
-                  (letters.cost + digits.cost) -
-                  8 * gap +
-                  (extra === 0 ? 10 : -3 * extra) +
-                  Math.max(0, Math.min(100, confidence)) * 0.2 +
-                  bonus
-              );
-              const prev = found.get(plate);
-              if (!prev || prev.score < score) found.set(plate, { plate, score, subs: letters.subs + digits.subs });
+      for (const lettersFirst of [true, false]) {
+        for (const letterCount of [3, 2]) {
+          // gap = 1 skips one stray mark read in the space between the letters and the digits
+          for (const gap of [0, 1]) {
+            for (const digitCount of [4, 3, 2]) {
+              if (digitCount === 2 && !(lettersFirst && letterCount === 3)) continue; // DTG 76 only
+              const end = start + letterCount + gap + digitCount;
+              if (end > line.length) continue;
+              const letterAt = lettersFirst ? start : start + digitCount + gap;
+              const digitAt = lettersFirst ? start + letterCount + gap : start;
+              const digits = fixed(line.slice(digitAt, digitAt + digitCount), "digit");
+              if (!digits) continue;
+              // a two-digit serial must be read as digits: "DIPLOMAT" is not DJP 10
+              if (digitCount === 2 && digits.subs) continue;
+              const layout = lettersFirst
+                ? LAYOUT.letters[`${letterCount}+${digitCount}`]
+                : LAYOUT.serial[`${digitCount}+${letterCount}`];
+              for (const letters of letterReadings(line.slice(letterAt, letterAt + letterCount), index, { serialFirst: !lettersFirst })) {
+                const plate = lettersFirst ? letters.text + digits.text : digits.text + letters.text;
+                const extra = line.length - (end - start);
+                const score = Math.round(
+                  layout +
+                    codeScore(letters.text, index) -
+                    (letters.cost + digits.cost) -
+                    8 * gap +
+                    (extra === 0 ? 10 : -3 * extra) +
+                    Math.max(0, Math.min(100, confidence)) * 0.2 +
+                    bonus
+                );
+                const prev = found.get(plate);
+                // a guess only while every way of reading it needed a swapped letter
+                const guess = Boolean(letters.guess) && (!prev || prev.guess);
+                if (!prev || prev.score < score) found.set(plate, { plate, score, subs: letters.subs + digits.subs, guess });
+                else prev.guess = guess;
+              }
             }
           }
         }
@@ -164,20 +219,30 @@ export function mergeCandidates(lists) {
         prev.reads += 1;
         if (i === 0) prev.tops += 1;
         prev.best = Math.max(prev.best, c.score);
+        prev.guess = Boolean(prev.guess && c.guess);
       }
     });
   }
   for (const c of byPlate.values()) c.score = c.best + 4 * Math.min(3, c.reads - 1);
-  return [...byPlate.values()].sort((a, b) => b.score - a.score || b.tops - a.tops);
+  const sorted = [...byPlate.values()].sort((a, b) => b.score - a.score || b.tops - a.tops);
+  // a rival: another plate of the same length that one read scored nearly as high (DRL 9115
+  // against DRL 1115). The reads disagree, so the first one is not clear.
+  const [top, ...rest] = sorted;
+  if (top) top.contested = rest.some((c) => c.plate.length === top.plate.length && c.best >= top.best - RIVAL_MARGIN);
+  return sorted;
 }
 
+/** How close a rival's best read may come before the top plate stops counting as clear. */
+export const RIVAL_MARGIN = 6;
+
 /**
- * Clear enough to look up without asking: one read alone scored high, and at least two reads put
- * it first. Repeats do not count toward the bar: a weak reading repeated by many drawings
- * (DWB001 for DWB 0001) is still weak.
+ * Clear enough to look up without asking: one read alone scored high, at least two reads put it
+ * first, no rival came close, and it was read as it stands rather than guessed by swapping a
+ * look-alike letter. Repeats do not count toward the bar: a weak reading repeated by many
+ * drawings (DWB001 for DWB 0001) is still weak.
  */
 export function isConfident(candidate) {
-  return Boolean(candidate && candidate.best >= CONFIDENT && candidate.tops >= 2);
+  return Boolean(candidate && candidate.best >= CONFIDENT && candidate.tops >= 2 && !candidate.contested && !candidate.guess);
 }
 
 /* ---------------------------------------------------------------- image work (pure, on pixel arrays) */
@@ -444,6 +509,43 @@ export function findPlateLines(gray, width, height, { minH = 0 } = {}) {
   return kept;
 }
 
+/**
+ * Where a diplomatic plate may be in a photo, by colour: plate-shaped patches of the plate's pale
+ * blue field, ranked by size and by how much crimson band sits just above them. `rgba` is a small
+ * copy of the photo (480 px wide). Returns up to `max` spots, { x, y } from 0 to 1, best first.
+ */
+export function plateColourSpots(rgba, width, height, max = 3) {
+  const blue = new Uint8Array(width * height);
+  const red = new Uint8Array(width * height);
+  for (let i = 0, p = 0; i < blue.length; i++, p += 4) {
+    const r = rgba[p] / 255, g = rgba[p + 1] / 255, b = rgba[p + 2] / 255;
+    const hi = Math.max(r, g, b), lo = Math.min(r, g, b), sat = hi ? (hi - lo) / hi : 0;
+    let hue = 0;
+    if (hi !== lo) {
+      if (hi === r) hue = 60 * (((g - b) / (hi - lo)) % 6);
+      else if (hi === g) hue = 60 * ((b - r) / (hi - lo) + 2);
+      else hue = 60 * ((r - g) / (hi - lo) + 4);
+    }
+    if (hue < 0) hue += 360;
+    if (hue >= 175 && hue <= 215 && sat >= 0.12 && sat <= 0.65 && hi >= 0.5) blue[i] = 1;
+    if ((hue <= 12 || hue >= 340) && sat >= 0.45 && hi >= 0.25) red[i] = 1;
+  }
+  const spots = [];
+  for (const part of labelBlobs(blue, width, height).blobs) {
+    const w = part.x1 - part.x0 + 1;
+    const h = part.y1 - part.y0 + 1;
+    if (part.n < 25 || w < 10 || w / h < 1.2 || w / h > 4 || part.n / (w * h) < 0.35) continue;
+    const band = Math.max(2, Math.round(h * 0.45));
+    let crimson = 0;
+    for (let y = Math.max(0, part.y0 - band); y < Math.min(height, part.y0 + 2); y++) {
+      for (let x = part.x0; x <= part.x1; x++) crimson += red[y * width + x];
+    }
+    const share = crimson / (w * (band + 2));
+    spots.push({ x: (part.x0 + w / 2) / width, y: (part.y0 + h / 2) / height, score: part.n * (0.3 + share) });
+  }
+  return spots.sort((a, b) => b.score - a.score).slice(0, max).map(({ x, y }) => ({ x, y }));
+}
+
 /** Otsu's threshold for a gray array. */
 export function otsu(gray) {
   const hist = new Array(256).fill(0);
@@ -665,7 +767,8 @@ export function lineImage(img, region, line, scale, { targetH = 56, stretch = 1,
  *   focus     optional { x, y } from 0 to 1: look near this point (the person tapped the plate)
  *   onProgress(fraction, label)
  *   debug     keep the images Tesseract read and the rows found, for testing
- * Resolves to { best, confident, candidates, reads, width, height }; best may be null.
+ * When the whole photo gives nothing usable, up to three spots with the plate's colours are read
+ * up close. Resolves to { best, confident, candidates, reads, width, height }; best may be null.
  * Reads run one at a time (they share one worker): a second photo waits for the first.
  */
 let queue = Promise.resolve();
@@ -681,56 +784,62 @@ async function readOne(file, { index, focus = null, onProgress = () => {}, debug
   try {
     onProgress(0.05, "Loading the reader");
     const worker = await getWorker();
-
-    const full = { x: 0, y: 0, w: photo.width, h: photo.height };
-    const region = focus
-      ? (() => {
-          const w = Math.round(photo.width * 0.5);
-          const h = Math.round(photo.height * 0.35);
-          const x = Math.round(Math.min(Math.max(0, focus.x * photo.width - w / 2), photo.width - w));
-          const y = Math.round(Math.min(Math.max(0, focus.y * photo.height - h / 2), photo.height - h));
-          return { x, y, w, h };
-        })()
-      : full;
-
-    onProgress(0.12, "Looking for the plate");
-    const view = sample(photo.img, region, 1400);
-    const lines = findPlateLines(view.gray, view.width, view.height).slice(0, 4);
-
-    // Each row is read as drawn; a row that does not give a clear plate is read again wider,
-    // smaller and larger, because Tesseract's mistakes change with the drawing. Reading stops at the
-    // first clear plate.
-    const variants = VARIANTS;
     const reads = [];
     const lists = [];
-    const passes = lines.length * variants.length;
-    let done = 0;
-    progressSink = (m) => {
-      if (m.status === "recognizing text") onProgress(0.2 + 0.75 * Math.min(1, (done + m.progress) / Math.max(1, passes)), "Reading the plate");
-    };
-    let clear = false;
-    for (const line of lines) {
-      const bonus = Math.round(line.score / 10);
-      for (const variant of variants) {
-        const image = lineImage(photo.img, region, line, view.scale, variant);
-        // a data URL, not the canvas: tesseract.js turns a canvas into a blob with toBlob(),
-        // which some browsers delay by up to a second
-        const { data } = await worker.recognize(image.toDataURL("image/png"));
-        done++;
-        reads.push({ text: data.text, confidence: data.confidence, line, variant, image: debug ? image : undefined });
-        const list = plateCandidates(data.text, index, { confidence: data.confidence, bonus });
-        lists.push(list);
-        if (!list.length && variant === variants[0]) break; // nothing plate-like in this row: next row
-        if (isConfident(mergeCandidates(lists)[0])) {
-          clear = true;
-          break;
+    const seen = [];
+    const best = () => mergeCandidates(lists)[0];
+    const usable = () => (best()?.best ?? -Infinity) >= FLOOR;
+
+    // Read one part of the photo: find its rows of characters, then read each row as drawn and,
+    // if that gives no clear plate, again wider, smaller and larger, because Tesseract's mistakes
+    // change with the drawing. Stops at the first clear plate.
+    const readRegion = async (region, from, to) => {
+      const view = sample(photo.img, region, 1400);
+      const lines = findPlateLines(view.gray, view.width, view.height).slice(0, 4);
+      seen.push(...lines);
+      const passes = lines.length * VARIANTS.length;
+      let done = 0;
+      progressSink = (m) => {
+        if (m.status === "recognizing text") onProgress(from + (to - from) * Math.min(1, (done + m.progress) / Math.max(1, passes)), "Reading the plate");
+      };
+      for (const line of lines) {
+        const bonus = Math.round(line.score / 10);
+        for (const variant of VARIANTS) {
+          const image = lineImage(photo.img, region, line, view.scale, variant);
+          // a data URL, not the canvas: tesseract.js turns a canvas into a blob with toBlob(),
+          // which some browsers delay by up to a second
+          const { data } = await worker.recognize(image.toDataURL("image/png"));
+          done++;
+          reads.push({ text: data.text, confidence: data.confidence, line, variant, region, image: debug ? image : undefined });
+          const list = plateCandidates(data.text, index, { confidence: data.confidence, bonus });
+          lists.push(list);
+          if (!list.length && variant === VARIANTS[0]) break; // nothing plate-like in this row: next row
+          if (isConfident(best())) return true;
         }
       }
-      if (clear) break;
+      return false;
+    };
+
+    onProgress(0.12, "Looking for the plate");
+    const whole = { x: 0, y: 0, w: photo.width, h: photo.height };
+    let clear = await readRegion(focus ? around(photo, focus) : whole, 0.2, focus ? 0.95 : 0.6);
+
+    // A plate that is small in the photo (a whole car, from across the street) is often missed at
+    // the size the photo is searched at. Look for the plate's own colours, then read up to three
+    // such spots up close, as if the person had tapped them.
+    if (!focus && !clear && !usable()) {
+      onProgress(0.62, "Looking closer");
+      const spots = plateColourSpots(...colourSample(photo.img, photo.width, photo.height), 3);
+      for (const [i, spot] of spots.entries()) {
+        const from = 0.62 + (0.33 * i) / spots.length;
+        clear = await readRegion(around(photo, spot), from, from + 0.33 / spots.length);
+        if (clear || usable()) break;
+      }
     }
     progressSink = null;
 
-    const candidates = mergeCandidates(lists);
+    // below the floor a reading is noise (a sign, a grille), not a plate
+    const candidates = mergeCandidates(lists).filter((c) => c.best >= FLOOR);
     onProgress(1, "Done");
     return {
       best: candidates[0] || null,
@@ -739,10 +848,27 @@ async function readOne(file, { index, focus = null, onProgress = () => {}, debug
       reads,
       width: photo.width,
       height: photo.height,
-      lines: debug ? lines : undefined
+      lines: debug ? seen : undefined
     };
   } finally {
     progressSink = null;
     URL.revokeObjectURL(photo.url);
   }
+}
+
+/** The part of the photo around a point (from 0 to 1) that a tap, or a colour spot, reads. */
+function around(photo, point) {
+  const w = Math.round(photo.width * 0.5);
+  const h = Math.round(photo.height * 0.35);
+  const x = Math.round(Math.min(Math.max(0, point.x * photo.width - w / 2), photo.width - w));
+  const y = Math.round(Math.min(Math.max(0, point.y * photo.height - h / 2), photo.height - h));
+  return { x, y, w, h };
+}
+
+/** The photo drawn 480 px wide, for the colour search: [rgba, width, height]. */
+function colourSample(img, width, height) {
+  const c = canvas(480, (480 * height) / width);
+  const g = c.getContext("2d", { willReadFrequently: true });
+  g.drawImage(img, 0, 0, c.width, c.height);
+  return [g.getImageData(0, 0, c.width, c.height).data, c.width, c.height];
 }

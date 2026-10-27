@@ -387,6 +387,7 @@ const STAGE_TEXT = {
   "Opening the photo": "Opening the photo…",
   "Loading the reader": "Loading the photo reader…",
   "Looking for the plate": "Looking for the plate…",
+  "Looking closer": "Looking closer for the plate…",
   "Reading the plate": "Reading the plate…",
   Done: "Reading the plate…"
 };
@@ -668,6 +669,12 @@ function bindEvents() {
     runLookup();
   });
   el.input.addEventListener("input", onInput);
+  // the whole plate is the field: a press on its band or bolts puts the caret in it too
+  el.plate.addEventListener("mousedown", (event) => {
+    if (event.target === el.input) return;
+    event.preventDefault();
+    el.input.focus();
+  });
   el.scan.addEventListener("click", () => {
     el.file.click();
     warmUp(); // load the reader while the picker is open

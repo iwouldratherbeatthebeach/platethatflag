@@ -798,8 +798,51 @@ main { flex: 1 0 auto; }
   appearance: none;
 }
 .plate__chars:not(input) { display: flex; align-items: center; justify-content: center; white-space: nowrap; }
-.plate__chars::placeholder { color: var(--plate-hint); opacity: 1; }
 .plate__chars:focus, .plate__chars:focus-visible { outline: none; }
+.plate__band { grid-row: 1; }
+.plate__chars, .plate__ghost { grid-row: 2; grid-column: 1; }
+.plate__foot { grid-row: 3; }
+/* Until something is typed, the plate shows the example with a caret in front of it, so it reads
+   as a field to type in rather than a picture. The caret blinks five times when the page opens
+   (WCAG 2.2.2: nothing blinks for longer than 5 s on its own), blinks like a caret while the plate
+   has focus, and stands in for the real caret until the first character. */
+.plate__chars::placeholder { color: transparent; }
+.plate__chars:placeholder-shown { caret-color: transparent; }
+.plate__ghost {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1em;
+  padding: 0 4cqi;
+  color: var(--plate-hint);
+  font-family: var(--font-plate);
+  font-weight: 600;
+  font-size: 22cqi;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.plate__chars:placeholder-shown + .plate__ghost { display: flex; }
+.plate__ghost::before {
+  content: "";
+  flex: none;
+  width: max(2px, 0.055em);
+  height: 0.86em;
+  border-radius: 1px;
+  background: var(--plate-band);
+  animation: caret-blink 1s steps(1, end) 5 both;
+}
+.plate__chars:focus + .plate__ghost::before { animation-iteration-count: infinite; }
+@keyframes caret-blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .plate__ghost::before { animation: none; }
+}
+@media (forced-colors: active) {
+  .plate__ghost::before { forced-color-adjust: none; background: CanvasText; }
+}
+.plate[data-plate] { cursor: text; }
 .plate__foot {
   display: flex;
   align-items: center;
@@ -828,7 +871,7 @@ main { flex: 1 0 auto; }
 
 /* fallback for browsers without container units: size from the viewport */
 @supports not (font-size: 1cqi) {
-  .plate__chars { font-size: clamp(48px, 15vw, 132px); }
+  .plate__chars, .plate__ghost { font-size: clamp(48px, 15vw, 132px); }
   .plate__band { font-size: clamp(11px, 2.8vw, 26px); }
 }
 

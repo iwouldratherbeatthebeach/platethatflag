@@ -143,6 +143,12 @@ test("decodePlate splits role letter, country code and serial", () => {
   assert.equal(un.countryCode, "AF");
   assert.equal(un.suffix, "D");
   assert.equal(un.serial, "1120");
+  const ny = decodePlate("1034 CYD", index); // serial first, as on UN plates in New York
+  assert.equal(ny.country, "People's Republic of China");
+  assert.equal(ny.role, "UN Diplomat");
+  assert.equal(ny.countryCode, "CY");
+  assert.equal(ny.suffix, "D");
+  assert.equal(ny.serial, "1034");
   const base = decodePlate("af", index);
   assert.equal(base.countryCode, "AF");
   assert.equal(base.role, "");
