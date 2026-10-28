@@ -12,8 +12,6 @@ import {
 } from "./plates.js";
 import { readPlate, warmUp } from "./reader.js";
 
-const EXAMPLE = "DAF 0789";
-
 const state = {
   index: null,
   iso: {},
@@ -54,29 +52,33 @@ function part(label, code, value, { empty = false, hit = false, country = false 
 
 function renderDecode() {
   const raw = el.input.value;
-  const example = !normalizePlate(raw);
-  const d = decodePlate(example ? EXAMPLE : raw, state.index);
+  const empty = !normalizePlate(raw);
+  const d = decodePlate(raw, state.index);
 
   el.band.textContent = bandWord(d);
   el.plate.dataset.role = d.role || "";
+  // the plate fills in as the box does, stamped the way plates are ("daf0789" -> "DAF 0789")
+  const shown = formatPlate(raw);
+  el.plateChars.textContent = shown;
+  el.plateChars.style.setProperty("--len", String(shown.length));
 
   const roleLetter = d.prefix || d.suffix;
   const roleText = d.role ? ROLE_INFO[d.role].word : d.code ? "No role letter" : "—";
   let countryText;
-  if (d.code) countryText = displayCountry(d.country);
+  if (empty) countryText = "—";
+  else if (d.code) countryText = displayCountry(d.country);
   else if (!state.index) countryText = "Loading codes…";
   else if (d.countryCode) countryText = "Not in our list";
   else countryText = "No match yet";
 
   el.decode.replaceChildren(
-    part("Role", roleLetter, roleText, { empty: example || !d.role, hit: !example && !!d.role }),
-    part("Country", d.countryCode, countryText, { empty: example || !d.code, hit: !example && !!d.code, country: true }),
-    part("Serial", null, d.serial || "—", { empty: example || !d.serial })
+    part("Role", roleLetter, roleText, { empty: !d.role, hit: !!d.role }),
+    part("Country", d.countryCode, countryText, { empty: !d.code, hit: !!d.code, country: true }),
+    part("Serial", null, d.serial || "—", { empty: !d.serial })
   );
-  el.decode.setAttribute("aria-label", example ? `Example: ${EXAMPLE} decoded` : "Your plate, decoded");
 
   // shared codes: the plate list has a few codes issued to two missions (QX: Pakistan and Iran)
-  const alternates = !example && d.code ? d.alternates.filter((a) => a.country !== d.country) : [];
+  const alternates = d.code ? d.alternates.filter((a) => a.country !== d.country) : [];
   if (alternates.length) {
     el.also.replaceChildren(
       "This code is also listed for ",
@@ -637,6 +639,7 @@ function cacheElements() {
   el.form = $("#lookup-form");
   el.input = $("#plate");
   el.plate = $("[data-plate]");
+  el.plateChars = $("[data-plate-chars]");
   el.band = $("[data-band]");
   el.decode = $("[data-decode]");
   el.also = $("[data-also]");
@@ -669,9 +672,8 @@ function bindEvents() {
     runLookup();
   });
   el.input.addEventListener("input", onInput);
-  // the whole plate is the field: a press on its band or bolts puts the caret in it too
+  // a press on the plate puts the cursor in the box above it
   el.plate.addEventListener("mousedown", (event) => {
-    if (event.target === el.input) return;
     event.preventDefault();
     el.input.focus();
   });
@@ -700,6 +702,12 @@ function bindEvents() {
 async function start() {
   cacheElements();
   bindEvents();
+  // on a computer the cursor starts in the box, so it blinks where to type; on a phone that would
+  // open the keyboard, and a shared link (?plate=) goes straight to its answer instead
+  const linked = new URLSearchParams(location.search).has("plate");
+  if (!linked && matchMedia("(hover: hover) and (pointer: fine)").matches && document.activeElement === document.body) {
+    el.input.focus({ preventScroll: true });
+  }
   initShell();
   el.top.replaceChildren(...skeletonRows(5));
   el.recent.replaceChildren(...skeletonRows(5));

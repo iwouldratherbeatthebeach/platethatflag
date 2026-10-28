@@ -10,7 +10,7 @@ API, D1 (`platethatflag-db`) for lookups, sightings and accounts.
 
 | Path | What it is |
 | --- | --- |
-| `index.html` | The decoder: the plate is the input and decodes itself as you type; lookup, photo reading, sighting form, most looked-up countries, recent lookups |
+| `index.html` | The decoder: a text box for the plate, which the plate graphic and its decode follow as you type; lookup, photo reading, sighting form, most looked-up countries, recent lookups |
 | `leaderboard.html` | Most looked-up countries, most logged vehicles, top spotters |
 | `login.html` | Sign in, create an account, signed-in state |
 | `about.html` | How the codes work, what the site records, license, contact |
@@ -218,9 +218,10 @@ index=platethatflag event_type=sighting | stats count by vehicle_make, vehicle_m
   only brand hue: full strength on the primary button, the rank bars and the active nav item, pale
   tints of it on areas. Light and dark themes follow the system and can be set in the footer.
 - Type: DM Sans for everything, Barlow Condensed only for the plate's characters.
-- The plate is the text field. Until something is typed it shows the example with a caret in front
-  of it. The caret blinks five times when the page opens (WCAG 2.2.2 allows 5 s), blinks while the
-  plate has focus, and stays still under reduced motion. A press anywhere on the plate focuses it.
+- The plate is typed into a plain text box ("Type your plate here"). The plate under it starts
+  blank and fills in as the box does, stamped the way plates are, and Look up plate under the plate
+  sends it (so does Enter). On a computer the cursor starts in the box; on a phone it doesn't, so
+  the keyboard stays closed until asked for. A press on the plate also puts the cursor in the box.
 - The logo is the plate flying as a flag. Each page carries it inline in the header and footer, so
   its outline takes the text colour in light and dark; the favicons use the crimson tile.
 - Motion tokens (`--ease-out`, `--ease-in-out`, `--ease-drawer`, `--dur-*`) follow the

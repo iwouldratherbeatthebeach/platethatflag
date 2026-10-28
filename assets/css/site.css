@@ -742,7 +742,8 @@ main { flex: 1 0 auto; }
 
 /* ---------------------------------------------------------------- 9. The plate (signature object) */
 /* A U.S. diplomatic plate: 12 x 6 in, a crimson band with the role, pale-blue field, black
-   characters, two bolt holes. The input *is* the plate's characters. Sized from its own width. */
+   characters, two bolt holes. On the decoder it shows what is typed in the box above it. Sized
+   from its own width. */
 .plate {
   --plate-w: 100%;
   container-type: inline-size;
@@ -798,50 +799,9 @@ main { flex: 1 0 auto; }
   appearance: none;
 }
 .plate__chars:not(input) { display: flex; align-items: center; justify-content: center; white-space: nowrap; }
-.plate__chars:focus, .plate__chars:focus-visible { outline: none; }
-.plate__band { grid-row: 1; }
-.plate__chars, .plate__ghost { grid-row: 2; grid-column: 1; }
-.plate__foot { grid-row: 3; }
-/* Until something is typed, the plate shows the example with a caret in front of it, so it reads
-   as a field to type in rather than a picture. The caret blinks five times when the page opens
-   (WCAG 2.2.2: nothing blinks for longer than 5 s on its own), blinks like a caret while the plate
-   has focus, and stands in for the real caret until the first character. */
-.plate__chars::placeholder { color: transparent; }
-.plate__chars:placeholder-shown { caret-color: transparent; }
-.plate__ghost {
-  display: none;
-  align-items: center;
-  justify-content: center;
-  gap: 0.1em;
-  padding: 0 4cqi;
-  color: var(--plate-hint);
-  font-family: var(--font-plate);
-  font-weight: 600;
-  font-size: 22cqi;
-  line-height: 1;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  pointer-events: none;
-}
-.plate__chars:placeholder-shown + .plate__ghost { display: flex; }
-.plate__ghost::before {
-  content: "";
-  flex: none;
-  width: max(2px, 0.055em);
-  height: 0.86em;
-  border-radius: 1px;
-  background: var(--plate-band);
-  animation: caret-blink 1s steps(1, end) 5 both;
-}
-.plate__chars:focus + .plate__ghost::before { animation-iteration-count: infinite; }
-@keyframes caret-blink { 50% { opacity: 0; } }
-@media (prefers-reduced-motion: reduce) {
-  .plate__ghost::before { animation: none; }
-}
-@media (forced-colors: active) {
-  .plate__ghost::before { forced-color-adjust: none; background: CanvasText; }
-}
+/* the decoder's plate: blank, then filled in as the box is, shrunk to fit past 8 characters */
+.plate__chars[data-plate-chars] { font-size: calc(22cqi * 8 / max(8, var(--len, 8))); overflow: hidden; }
+/* a press on the plate puts the cursor in the box above it */
 .plate[data-plate] { cursor: text; }
 .plate__foot {
   display: flex;
@@ -863,7 +823,6 @@ main { flex: 1 0 auto; }
   text-transform: uppercase;
   opacity: 0.72;
 }
-.plate:focus-within { box-shadow: 0 0 0 1px var(--plate-edge), 0 0 0 4px var(--surface), 0 0 0 6px var(--focus); }
 /* a small, read-only plate used in lists and the result header */
 .plate--mini { --plate-w: 132px; max-width: 132px; flex: none; }
 .plate--mini .plate__chars { font-size: 21cqi; padding: 0 2cqi; pointer-events: none; }
@@ -871,7 +830,7 @@ main { flex: 1 0 auto; }
 
 /* fallback for browsers without container units: size from the viewport */
 @supports not (font-size: 1cqi) {
-  .plate__chars, .plate__ghost { font-size: clamp(48px, 15vw, 132px); }
+  .plate__chars, .plate__chars[data-plate-chars] { font-size: clamp(48px, 15vw, 132px); }
   .plate__band { font-size: clamp(11px, 2.8vw, 26px); }
 }
 
@@ -879,6 +838,23 @@ main { flex: 1 0 auto; }
 .decoder { display: grid; gap: 20px; }
 .decoder__label { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 12px; }
 .decoder__label label { flex: 1 1 auto; font-weight: 600; font-size: 0.9375rem; }
+
+/* the plate is typed into a plain, unmistakable text box above the plate; the plate fills in as
+   it is typed, and Look up plate, under the plate, sends it */
+.entry { display: grid; gap: 8px; }
+.input--plate {
+  min-height: 56px;
+  padding: 0 16px;
+  border-width: 2px;
+  font-family: var(--font-plate);
+  font-weight: 600;
+  font-size: 1.75rem;           /* 28px, well over the 16px that stops iOS zooming */
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  caret-color: var(--accent);
+}
+/* the hint reads as a hint, not as a plate already typed in */
+.input--plate::placeholder { color: var(--faint); font: 400 1.0625rem/1 var(--font); letter-spacing: 0; text-transform: none; }
 
 /* the plate decoded in three parts, under the plate */
 .decode {
@@ -917,7 +893,7 @@ main { flex: 1 0 auto; }
 /* text-sized buttons with a 44px tap area (padding out, margin back in, so the line keeps its height) */
 .decoder__examples .text-button { font-weight: 600; font-variant-numeric: tabular-nums; padding: 11px 2px; margin: -11px 0; }
 @media (max-width: 35em) {
-  .decoder__actions .btn { flex: 1 1 calc(50% - 6px); }
+  .decoder__actions .btn { flex: 1 1 100%; }
 }
 
 /* photo reading: the photo (tap the plate to read that spot) beside what was read */

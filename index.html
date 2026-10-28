@@ -65,28 +65,30 @@
         <section class="panel" aria-labelledby="decoder-title">
           <h2 id="decoder-title" class="sr-only">Plate decoder</h2>
           <form id="lookup-form" class="decoder" novalidate>
-            <div class="decoder__label">
-              <label for="plate">Plate letters and numbers</label>
-              <span class="small muted" id="plate-hint">Spaces and dashes are fine</span>
+            <div class="entry">
+              <div class="decoder__label">
+                <label for="plate">Plate letters and numbers</label>
+                <span class="small muted" id="plate-hint">Spaces and dashes are fine</span>
+              </div>
+              <input class="input input--plate" id="plate" name="plate" type="text" inputmode="text"
+                autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false"
+                enterkeyhint="search" maxlength="12" placeholder="Type your plate here"
+                aria-describedby="plate-hint plate-error">
+              <p class="field__error" id="plate-error" role="alert" hidden></p>
             </div>
 
-            <div class="plate" data-plate>
+            <div class="plate" data-plate aria-hidden="true">
               <div class="plate__face">
-                <div class="plate__band" data-band aria-hidden="true">Diplomat</div>
-                <input class="plate__chars" id="plate" name="plate" type="text" inputmode="text"
-                  autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false"
-                  enterkeyhint="search" maxlength="12" placeholder="DAF 0789"
-                  aria-describedby="plate-hint plate-error">
-                <span class="plate__ghost" aria-hidden="true">DAF 0789</span>
-                <div class="plate__foot" aria-hidden="true"><span class="plate__bolt"></span><span class="plate__bolt"></span></div>
+                <div class="plate__band" data-band>Diplomatic</div>
+                <div class="plate__chars" data-plate-chars></div>
+                <div class="plate__foot"><span class="plate__bolt"></span><span class="plate__bolt"></span></div>
               </div>
             </div>
-            <p class="field__error" id="plate-error" role="alert" hidden></p>
 
-            <dl class="decode" data-decode aria-label="Example: DAF 0789 decoded">
-              <div class="decode__part"><dt>Role <span class="decode__code">D</span></dt><dd class="is-empty">Diplomat</dd></div>
-              <div class="decode__part decode__part--country"><dt>Country <span class="decode__code">AF</span></dt><dd class="is-empty">Japan</dd></div>
-              <div class="decode__part"><dt>Serial</dt><dd class="is-empty">0789</dd></div>
+            <dl class="decode" data-decode aria-label="Your plate, decoded">
+              <div class="decode__part"><dt>Role</dt><dd class="is-empty">—</dd></div>
+              <div class="decode__part decode__part--country"><dt>Country</dt><dd class="is-empty">—</dd></div>
+              <div class="decode__part"><dt>Serial</dt><dd class="is-empty">—</dd></div>
             </dl>
             <p class="also" data-also hidden></p>
 
