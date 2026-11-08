@@ -3,7 +3,7 @@
 Decode a U.S. diplomatic license plate: type its letters (or scan a photo) to see the country, the
 mission role and the flag, log the vehicle you saw, and see which countries people look up most.
 
-Live at <https://platethatflag.pages.dev>. Static pages on Cloudflare Pages, Pages Functions for the
+Live at <https://flagthatplate.com>. Static pages on Cloudflare Pages, Pages Functions for the
 API, D1 (`platethatflag-db`) for lookups, sightings and accounts.
 
 ## Layout
