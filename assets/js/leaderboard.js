@@ -2,7 +2,7 @@
 // { topCountries: [{ country, searches }], topVehicles: [{ vehicle_make, vehicle_model, observations }],
 //   topSubmitters: [{ username, submissions }] }
 import { $, h, api, formatNumber, flagImage, initials, initShell } from "./core.js";
-import { displayCountry, flagSources } from "./plates.js";
+import { displayCountry, flagSources, isoCode } from "./plates.js";
 
 let iso = {};
 
@@ -31,7 +31,7 @@ function renderCountries(list, rows) {
         "li",
         { class: "ranking__row", style: { "--share": ((Number(row.searches) || 0) / max).toFixed(3) } },
         h("span", { class: "rank" }, i + 1),
-        flagImage(flagSources(iso[row.country]), "", "row"),
+        flagImage(flagSources(isoCode(row.country, iso)), "", "row"),
         h("span", { class: "ranking__name", title: displayCountry(row.country) }, displayCountry(row.country)),
         h("span", { class: "ranking__value" }, formatNumber(row.searches))
       )

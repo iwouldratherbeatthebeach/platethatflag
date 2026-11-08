@@ -17,7 +17,7 @@ API, D1 (`platethatflag-db`) for lookups, sightings and accounts.
 | `assets/css/site.css` | The whole design system: tokens (light and dark), type, layout, components, the plate, motion |
 | `assets/js/` | ES modules, no build step: `core.js` (shell, safe DOM builder, API, formatting), `toast.js`, `plates.js` (decoding, pure), `reader.js` (reading a plate from a photo), one module per page |
 | `assets/img/` | The logo (`logo.svg`; `logo-tile.svg` is the app-icon version the PNG favicons are rendered from) and the social preview image, made from `diplomatic-plate.png` |
-| `plates.csv`, `iso_mapping.json` | The plate codes and the country-to-flag map, fetched by the pages |
+| `plates.csv`, `iso_mapping.json` | The plate codes (one `CODE,Country Role` row each, such as `EAB,Taiwan Staff`) and the country-to-flag map, fetched by the pages. A country `iso_mapping.json` doesn't list gets its flag from the browser's own English country names, so a new row needs no edit there |
 | `functions/` | Pages Functions: `/track`, `/unknown`, `/observe`, `/login`, `/signup`, `/logout`, `/me`, `/stats`, `/recent`, `/api/leaderboard`, `/ocr` |
 | `functions/_lib/splunk.js` | Splunk HTTP Event Collector forwarding (below) |
 | `tests/` | `node --test tests/*.test.mjs` (Node 22 or newer, no dependencies) |

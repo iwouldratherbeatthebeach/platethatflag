@@ -54,7 +54,8 @@ export function normalizePlate(value) {
 
 /** "Barbados Diplomat" -> { country: "Barbados", role: "Diplomat" }. */
 export function splitDesc(desc) {
-  const m = String(desc || "").match(/^(.+?)\s+(UN Diplomat|Consul|Diplomat|Staff)$/);
+  // a comma before the role reads the same ("Taiwan,Staff"): an easy slip when adding a row
+  const m = String(desc || "").match(/^(.+?)(?:\s*,\s*|\s+)(UN Diplomat|Consul|Diplomat|Staff)$/);
   if (m) return { country: m[1], role: m[2] };
   return { country: String(desc || ""), role: "" };
 }
@@ -134,9 +135,47 @@ export function isFullPlate(value) {
 
 /** The name people recognize: drops the "|alias" part of a few rows. Tracking keeps the raw string. */
 export function displayCountry(country) {
-  const name = String(country || "").split("|")[0].trim();
+  // lookups saved while a row read "Taiwan,Staff" show as Taiwan
+  const name = String(country || "").split("|")[0].replace(/\s*,\s*(UN Diplomat|Consul|Diplomat|Staff)$/i, "").trim();
   if (name.toUpperCase() === "UNKNOWN") return "Unknown";
   return name;
+}
+
+let regionNames = null;
+/** Every ISO 3166 region by its English name ("taiwan" -> "TW"), from the browser's own Intl data. */
+function regionCodes() {
+  if (regionNames) return regionNames;
+  regionNames = new Map();
+  try {
+    const names = new Intl.DisplayNames(["en"], { type: "region", fallback: "none" });
+    for (let a = 65; a <= 90; a++) {
+      for (let b = 65; b <= 90; b++) {
+        const code = String.fromCharCode(a, b);
+        const name = names.of(code);
+        if (name && !regionNames.has(name.toLowerCase())) regionNames.set(name.toLowerCase(), code);
+      }
+    }
+  } catch {
+    /* no Intl region names: iso_mapping.json alone */
+  }
+  return regionNames;
+}
+
+/**
+ * The ISO 3166 code for a country as plates.csv names it, for its flag: iso_mapping.json first,
+ * then the name without its alias, note or stray role, then the English region names every
+ * browser carries. A country added to plates.csv gets its flag without touching
+ * iso_mapping.json (Taiwan -> TW).
+ */
+export function isoCode(country, isoMap = {}) {
+  const raw = String(country || "");
+  if (isoMap[raw]) return isoMap[raw];
+  for (const name of [displayCountry(raw), wikiTitle(raw)]) {
+    if (isoMap[name]) return isoMap[name];
+    const code = regionCodes().get(name.toLowerCase());
+    if (code) return code;
+  }
+  return null;
 }
 
 /** A Wikipedia page title for a country row ("Iran (DC only)" -> "Iran"). */

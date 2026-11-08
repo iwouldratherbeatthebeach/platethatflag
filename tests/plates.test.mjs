@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
   parsePlates, extractCode, splitDesc, normalizePlate, decodePlate, isFullPlate, formatPlate,
-  displayCountry, wikiTitle, extractPlateCandidateFromText, countBaseCodes, flagSources, letterBlock
+  displayCountry, wikiTitle, extractPlateCandidateFromText, countBaseCodes, flagSources, letterBlock, isoCode
 } from "../assets/js/plates.js";
 
 const csv = readFileSync(new URL("../plates.csv", import.meta.url), "utf8");
@@ -180,6 +180,28 @@ test("display names", () => {
 test("OCR candidate extraction matches the previous implementation", () => {
   const samples = ["DAF 0789", "DIPLOMAT\nDAF O789\nDEPARTMENT", "0789 DAF", "QX 1Z34", "no plate here", "", "D A F 0 7 8 9", "sAF5S1O"];
   for (const s of samples) assert.equal(extractPlateCandidateFromText(s), legacy.ocr(s), JSON.stringify(s));
+});
+
+test("every country in plates.csv gets its flag, including ones iso_mapping.json doesn't list", () => {
+  const iso = JSON.parse(readFileSync(new URL("../iso_mapping.json", import.meta.url), "utf8"));
+  assert.equal(isoCode("Japan", iso), "JP");
+  assert.equal(isoCode("Iran (DC only)", iso), "IR");
+  assert.equal(iso.Taiwan, undefined);
+  assert.equal(isoCode("Taiwan", iso), "TW"); // added to plates.csv on its own; the browser knows the name
+  assert.equal(isoCode("Taiwan,Staff", iso), "TW"); // saved while the row read "EAB,Taiwan,Staff"
+  assert.equal(isoCode("UNKNOWN", iso), null);
+  // only organisations, a country that no longer exists, and UNKNOWN go without a flag
+  const missing = [...new Set([...index.map.values()].map((d) => splitDesc(d).country))].filter((c) => !isoCode(c, iso));
+  assert.deepEqual(missing.sort(), ["European Economic Communities", "International Monetary Fund", "International Organization", "UNKNOWN", "World Bank", "Yugoslavia"]);
+});
+
+test("a row with a comma before its role reads the same as one with a space", () => {
+  assert.deepEqual(splitDesc("Taiwan,Staff"), { country: "Taiwan", role: "Staff" });
+  assert.deepEqual(splitDesc("Taiwan Staff"), { country: "Taiwan", role: "Staff" });
+  assert.equal(displayCountry("Taiwan,Staff"), "Taiwan");
+  const eab = decodePlate("EAB 1234", index);
+  assert.equal(eab.country, "Taiwan");
+  assert.equal(eab.role, "Staff");
 });
 
 test("counts and flag sources", () => {

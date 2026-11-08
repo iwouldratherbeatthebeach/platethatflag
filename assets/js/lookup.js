@@ -8,7 +8,7 @@ import {
 } from "./core.js";
 import {
   ROLE_INFO, parsePlates, decodePlate, normalizePlate, formatPlate, isFullPlate, displayCountry, wikiTitle,
-  missionNote, extractCode, flagSources
+  missionNote, extractCode, flagSources, isoCode
 } from "./plates.js";
 import { readPlate, warmUp } from "./reader.js";
 
@@ -32,7 +32,7 @@ async function loadData() {
   state.iso = iso || {};
 }
 
-const isoFor = (country) => state.iso[country] || null;
+const isoFor = (country) => isoCode(country, state.iso);
 const flagFor = (country, size) =>
   flagImage(flagSources(isoFor(country)), size === "large" ? `Flag of ${displayCountry(country)}` : "", size);
 
