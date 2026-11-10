@@ -1,0 +1,329 @@
+<form version="1.1">
+  <label>Research a code</label>
+  <description>Everything the site has seen for one code, the listed codes it could be, and a place to record what you find.</description>
+  <init>
+    <set token="refresh">0</set>
+  </init>
+  <!-- the code's record in the research queue; also fills in the findings form -->
+  <search id="record">
+    <query><![CDATA[| inputlookup ptf_research
+| where code==upper(replace($code|s$, "[^A-Za-z]", ""))
+| eval refreshed="$refresh$"
+| eval country=if(len(country) > 0, country, "-"), note=if(len(note) > 0, note, "-"), updated=strftime(updated_at, "%Y-%m-%d %H:%M")]]></query>
+    <done>
+      <condition match="'job.resultCount' > 0">
+        <set token="has_record">true</set>
+        <set token="form.new_status">$result.status$</set>
+        <set token="form.new_country">$result.country$</set>
+        <set token="form.new_note">$result.note$</set>
+      </condition>
+      <condition>
+        <unset token="has_record"></unset>
+        <set token="form.new_status">researching</set>
+        <set token="form.new_country">-</set>
+        <set token="form.new_note">-</set>
+      </condition>
+    </done>
+  </search>
+  <!-- runs only when Save findings is pressed (save_at). Every way it can end, and any edit to the
+       findings, clears save_at, so a cancelled or failed save never re-runs on its own. -->
+  <search id="save">
+    <query><![CDATA[| makeresults
+| eval code=upper(replace($code|s$, "[^A-Za-z]", "")), status=lower(trim($new_status|s$)), country=trim($new_country|s$), note=trim($new_note|s$), updated_by=$env:user|s$, saved_at="$save_at$"
+| eval country=if(country=="-", "", country), note=if(note=="-", "", note)
+| where len(code)==2 AND in(status, "new", "researching", "identified", "added", "not_a_code")
+| lookup ptf_research code OUTPUT first_seen
+| eval _key=code, updated_at=now()
+| table _key code status country note first_seen updated_at updated_by
+| outputlookup append=true key_field=_key override_if_empty=false ptf_research]]></query>
+    <done>
+      <condition match="'job.resultCount' > 0">
+        <set token="saved_message">Saved: $result.code$ is marked $result.status$.</set>
+        <unset token="save_at"></unset>
+        <eval token="refresh">now()</eval>
+      </condition>
+      <condition>
+        <set token="saved_message">Not saved: a code is two letters.</set>
+        <unset token="save_at"></unset>
+      </condition>
+    </done>
+    <cancelled>
+      <set token="saved_message">Not saved.</set>
+      <unset token="save_at"></unset>
+    </cancelled>
+    <error>
+      <set token="saved_message">Not saved: Splunk reported an error. Writing to the queue takes the admin, power or sc_admin role.</set>
+      <unset token="save_at"></unset>
+    </error>
+    <fail>
+      <set token="saved_message">Not saved: the search failed.</set>
+      <unset token="save_at"></unset>
+    </fail>
+  </search>
+  <!-- every lookup, unknown plate and sighting whose plate reads as this code -->
+  <search id="events">
+    <query><![CDATA[`ptf_events` (event_type="unknown_plate" OR event_type="lookup" OR event_type="sighting")
+| `ptf_plate_parts`
+| where code==upper(replace($code|s$, "[^A-Za-z]", ""))
+| fields _time event_type plate code mission_role layout serial entered_via country src_country src_ip_hash city state vehicle_make vehicle_model vehicle_color]]></query>
+    <earliest>$time.earliest$</earliest>
+    <latest>$time.latest$</latest>
+  </search>
+  <fieldset submitButton="false" autoRun="true">
+    <input type="text" token="code" searchWhenChanged="true">
+      <label>Code (two letters, such as GK)</label>
+      <change>
+        <unset token="saved_message"></unset>
+        <unset token="save_at"></unset>
+      </change>
+    </input>
+    <input type="time" token="time" searchWhenChanged="true">
+      <label>Seen during</label>
+      <default>
+        <earliest>0</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row rejects="$code$">
+    <panel>
+      <html>
+        <p>Type a two-letter code above, or pick one in the <a href="ptf_research_queue">Research queue</a>.</p>
+      </html>
+    </panel>
+  </row>
+  <row depends="$code$">
+    <panel>
+      <single>
+        <title>Lookups</title>
+        <search base="events">
+          <query><![CDATA[| where event_type!="sighting" | stats count]]></query>
+        </search>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Visitors</title>
+        <search base="events">
+          <query><![CDATA[| stats dc(src_ip_hash) AS visitors]]></query>
+        </search>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Sightings</title>
+        <search base="events">
+          <query><![CDATA[| where event_type=="sighting" | stats count]]></query>
+        </search>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>First seen</title>
+        <search base="events">
+          <query><![CDATA[| stats min(_time) AS first | eval first=strftime(first, "%Y-%m-%d")]]></query>
+        </search>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+      </single>
+    </panel>
+  </row>
+  <row depends="$code$">
+    <panel>
+      <title>In the research queue</title>
+      <table depends="$has_record$">
+        <search base="record">
+          <query><![CDATA[| table code status country note updated_by updated
+| rename code AS Code, status AS Status, country AS Country, note AS Note, updated_by AS "Updated by", updated AS Updated]]></query>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+      <html rejects="$has_record$">
+        <p>Not in the queue yet. The alert <em>Flag That Plate - New codes to research</em> adds codes as the site sees them; saving your findings below adds it now.</p>
+      </html>
+    </panel>
+    <panel>
+      <title>Your findings</title>
+      <input type="dropdown" token="new_status" searchWhenChanged="true">
+        <label>Status</label>
+        <choice value="new">New</choice>
+        <choice value="researching">Researching</choice>
+        <choice value="identified">Identified</choice>
+        <choice value="added">Added to plates.csv</choice>
+        <choice value="not_a_code">Not a code</choice>
+        <default>researching</default>
+        <change>
+          <unset token="save_at"></unset>
+        </change>
+      </input>
+      <input type="dropdown" token="new_country" searchWhenChanged="true">
+        <label>Country, as plates.csv names it</label>
+        <choice value="-">Not identified yet</choice>
+        <default>-</default>
+        <allowCustomValues>true</allowCustomValues>
+        <fieldForLabel>country</fieldForLabel>
+        <fieldForValue>country</fieldForValue>
+        <search>
+          <query><![CDATA[| inputlookup ptf_plate_codes | where upper(country)!="UNKNOWN" | stats count BY country | fields country]]></query>
+        </search>
+        <change>
+          <unset token="save_at"></unset>
+        </change>
+      </input>
+      <input type="text" token="new_note" searchWhenChanged="true">
+        <label>Note (- for none)</label>
+        <default>-</default>
+        <change>
+          <unset token="save_at"></unset>
+        </change>
+      </input>
+      <!-- an emptied box can leave its token unset, which would make Save do nothing: hide it then -->
+      <input type="link" token="save_click" searchWhenChanged="true" depends="$new_note$,$new_country$">
+        <label>Save</label>
+        <choice value="save">Save findings</choice>
+        <change>
+          <condition value="save">
+            <eval token="save_at">now()</eval>
+            <unset token="form.save_click"></unset>
+          </condition>
+        </change>
+      </input>
+      <html depends="$saved_message$">
+        <p><b>$saved_message$</b></p>
+      </html>
+      <html rejects="$new_note$">
+        <p><b>Type - in Note to save without one.</b></p>
+      </html>
+      <html rejects="$new_country$">
+        <p><b>Pick a country, or Not identified yet, to save.</b></p>
+      </html>
+      <html>
+        <p>Pick a country from the list or type a new one. Splunk 9 and later usually ask before a dashboard writes to a lookup (<code>outputlookup</code> is on its list of risky commands): choose Run Query Anyway to save, Cancel to leave the queue as it is.</p>
+        <p>From the search bar, quoting every value: <code>| `ptf_research_set("$code$", "identified", "Country", "How you know")`</code></p>
+      </html>
+    </panel>
+  </row>
+  <row depends="$code$">
+    <panel>
+      <title>Plates seen</title>
+      <table>
+        <search base="events">
+          <query><![CDATA[| eval answer=case(event_type=="unknown_plate", "not in plates.csv", event_type=="sighting", "sighting of ".country, true(), country)
+| eval entered_via=coalesce(entered_via, if(event_type=="sighting", null(), "not recorded"))
+| fillnull value="-" mission_role
+| stats count AS times values(answer) AS answer values(entered_via) AS entered_via min(_time) AS first_seen max(_time) AS last_seen BY plate mission_role
+| sort 0 -times
+| eval first_seen=strftime(first_seen, "%Y-%m-%d"), last_seen=strftime(last_seen, "%Y-%m-%d %H:%M")
+| rename plate AS Plate, mission_role AS Role, times AS Times, answer AS "The site said", entered_via AS "Entered via", first_seen AS "First seen", last_seen AS "Last seen"]]></query>
+        </search>
+        <option name="count">20</option>
+        <option name="wrap">true</option>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+    <panel>
+      <title>Over time</title>
+      <chart>
+        <search base="events">
+          <query><![CDATA[| timechart count BY event_type]]></query>
+        </search>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.stackMode">stacked</option>
+        <option name="charting.axisTitleX.visibility">collapsed</option>
+        <option name="charting.axisTitleY.visibility">collapsed</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="charting.drilldown">none</option>
+      </chart>
+    </panel>
+  </row>
+  <row depends="$code$">
+    <panel>
+      <title>Sightings</title>
+      <table>
+        <search base="events">
+          <query><![CDATA[| where event_type=="sighting"
+| sort 0 -_time
+| eval seen=strftime(_time, "%Y-%m-%d %H:%M")
+| table seen plate city state vehicle_make vehicle_model vehicle_color
+| rename seen AS Seen, plate AS Plate, city AS City, state AS State, vehicle_make AS Make, vehicle_model AS Model, vehicle_color AS Color]]></query>
+        </search>
+        <option name="count">20</option>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+    <panel>
+      <title>Where visitors connect from</title>
+      <table>
+        <search base="events">
+          <query><![CDATA[| stats dc(src_ip_hash) AS Visitors count AS Events BY src_country
+| sort 0 -Visitors
+| rename src_country AS "Country (CF-IPCountry)"]]></query>
+        </search>
+        <option name="count">10</option>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+  <row depends="$code$">
+    <panel>
+      <title>Listed codes it could be</title>
+      <html>
+        <p>Codes in plates.csv one letter away, where that letter is easy to misread on a plate or mistype next to it, and the code with its letters swapped.</p>
+      </html>
+      <table>
+        <search>
+          <query><![CDATA[| makeresults
+| eval code=upper(replace($code|s$, "[^A-Za-z]", ""))
+| where len(code)==2
+| eval pos=mvappend("1", "2"), letter=split("A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z", ",")
+| mvexpand pos
+| mvexpand letter
+| eval was=substr(code, tonumber(pos), 1), candidate=if(pos=="1", letter.substr(code, 2, 1), substr(code, 1, 1).letter)
+| where candidate!=code
+| lookup ptf_letter_confusions letter AS was other AS letter OUTPUT why
+| where isnotnull(why)
+| eval why=why.": the ".was." may be ".letter
+| append [| makeresults | eval code=upper(replace($code|s$, "[^A-Za-z]", "")) | where len(code)==2 | eval candidate=substr(code, 2, 1).substr(code, 1, 1), why="letters swapped" | where candidate!=code]
+| lookup ptf_plate_codes plate_code AS candidate OUTPUT country
+| where isnotnull(country)
+| stats values(why) AS why values(country) AS country BY candidate
+| eval why=mvjoin(why, ", "), country=mvjoin(country, " / ")
+| rename candidate AS "Listed code", country AS "Listed as", why AS "Why it could be this one"]]></query>
+        </search>
+        <option name="count">20</option>
+        <option name="wrap">true</option>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+    <panel>
+      <title>The code in plates.csv</title>
+      <html>
+        <p>Rows of this app's copy of plates.csv with these two letters as their code: a code listed for some roles but not the one seen is usually a missing row.</p>
+      </html>
+      <table>
+        <search>
+          <query><![CDATA[| inputlookup ptf_plate_codes
+| where base_code==upper(replace($code|s$, "[^A-Za-z]", ""))
+| table plate_code mission_role country
+| rename plate_code AS Code, mission_role AS Role, country AS Country]]></query>
+        </search>
+        <option name="count">10</option>
+        <option name="drilldown">none</option>
+      </table>
+      <html>
+        <h3>Look further</h3>
+        <p>The State Department doesn't publish which code belongs to which mission, so codes are pieced together from sightings: where the car was (near a chancery, a residence, the UN), what it was, and whether the same code turns up with other role letters.</p>
+        <ul>
+          <li><a href="https://www.google.com/search?q=%22$code|u$%22+diplomatic+license+plate" target="_blank" rel="noopener noreferrer">Search the web for the code</a></li>
+          <li><a href="https://diplomacy.state.gov/items/diplomatic-license-plates/" target="_blank" rel="noopener noreferrer">U.S. diplomatic license plates (National Museum of American Diplomacy)</a></li>
+        </ul>
+      </html>
+    </panel>
+  </row>
+</form>

@@ -201,6 +201,10 @@ function unlistedParts(cleaned) {
   if (!block) return {};
   const serial = cleaned.replace(/[A-Z]/g, "");
   if (block.length === 2) return { countryCode: block, serial };
+  // serial-first plates are UN plates, whose role letter comes last: "1034 CXD" is CX, not a consul's XD
+  if (/^[0-9]/.test(cleaned) && block[2] === ROLE_INFO["UN Diplomat"].letter) {
+    return { role: "UN Diplomat", suffix: block[2], countryCode: block.slice(0, 2), serial };
+  }
   const prefixRole = Object.keys(ROLE_INFO).find((role) => ROLE_INFO[role].position === "prefix" && ROLE_INFO[role].letter === block[0]);
   if (prefixRole) return { role: prefixRole, prefix: block[0], countryCode: block.slice(1), serial };
   if (block[2] === ROLE_INFO["UN Diplomat"].letter) return { role: "UN Diplomat", suffix: block[2], countryCode: block.slice(0, 2), serial };

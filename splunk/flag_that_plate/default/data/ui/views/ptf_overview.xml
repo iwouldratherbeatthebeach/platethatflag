@@ -1,0 +1,210 @@
+<form version="1.1">
+  <label>Overview</label>
+  <description>What happens on flagthatplate.com: lookups, plates it doesn't know, sightings, sign-ins and errors, as the site's Functions send them through HEC.</description>
+  <search id="data_check">
+    <query><![CDATA[| tstats count WHERE `ptf_index` sourcetype="platethatflag:event"]]></query>
+    <earliest>0</earliest>
+    <latest>now</latest>
+    <done>
+      <condition match="'job.resultCount' == 0 OR 'result.count' == 0">
+        <set token="no_data">true</set>
+      </condition>
+      <condition>
+        <unset token="no_data"></unset>
+      </condition>
+    </done>
+  </search>
+  <fieldset submitButton="false" autoRun="true">
+    <input type="time" token="time" searchWhenChanged="true">
+      <label>Time range</label>
+      <default>
+        <earliest>-7d@d</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row depends="$no_data$">
+    <panel>
+      <html>
+        <h2>No Flag That Plate events yet</h2>
+        <p>This app reads the events the site sends to the HTTP Event Collector. To start them:</p>
+        <ol>
+          <li>Create an index named <code>platethatflag</code>, or point the <code>ptf_index</code> macro (Settings &gt; Advanced search &gt; Search macros) at the index you use.</li>
+          <li>Create an HEC token that writes to that index (Settings &gt; Data inputs &gt; HTTP Event Collector).</li>
+          <li>Give the site <code>SPLUNK_HEC_URL</code> and <code>SPLUNK_HEC_TOKEN</code> (Cloudflare Pages &gt; Settings &gt; Variables and Secrets), then redeploy. The site's README covers every setting.</li>
+        </ol>
+        <p>Then look up a plate on the site; it shows up here within a few seconds.</p>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <single>
+        <title>Lookups</title>
+        <search>
+          <query><![CDATA[`ptf_events` event_type="lookup" | stats count]]></query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="underLabel">plates looked up</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Unknown plates</title>
+        <search>
+          <query><![CDATA[`ptf_events` event_type="unknown_plate" | stats count]]></query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="underLabel">codes not in plates.csv</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">all</option>
+        <drilldown>
+          <link target="_self">ptf_research_queue</link>
+        </drilldown>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Codes to research</title>
+        <search>
+          <query><![CDATA[| inputlookup ptf_research
+| fields code status
+| append [search `ptf_needs_research` | stats count BY code | fields code]
+| stats first(status) AS status BY code
+| eval status=coalesce(status, "new")
+| where status=="new" OR status=="researching"
+| stats count]]></query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="underLabel">new or in progress</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">all</option>
+        <drilldown>
+          <link target="_self">ptf_research_queue</link>
+        </drilldown>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Sightings</title>
+        <search>
+          <query><![CDATA[`ptf_events` event_type="sighting" | stats count]]></query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="underLabel">vehicles logged</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">all</option>
+        <drilldown>
+          <link target="_self">ptf_sightings</link>
+        </drilldown>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Failed sign-ins</title>
+        <search>
+          <query><![CDATA[`ptf_events` event_type="login" action="failure" | stats count]]></query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="underLabel">attempts</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">all</option>
+        <drilldown>
+          <link target="_self">ptf_sign_ins</link>
+        </drilldown>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Server errors</title>
+        <search>
+          <query><![CDATA[`ptf_events` event_type="error" | stats count]]></query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="underLabel">500 responses</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">all</option>
+        <drilldown>
+          <link target="_self">ptf_sign_ins</link>
+        </drilldown>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Activity</title>
+      <chart>
+        <search>
+          <query><![CDATA[`ptf_events` | timechart count BY event_type]]></query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.stackMode">stacked</option>
+        <option name="charting.axisTitleX.visibility">collapsed</option>
+        <option name="charting.axisTitleY.text">Events</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="charting.drilldown">none</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Most looked-up countries</title>
+      <chart>
+        <search>
+          <query><![CDATA[`ptf_events` event_type="lookup"
+| `ptf_country_name`
+| eval country=if(upper(country)=="UNKNOWN", "Listed as UNKNOWN", country)
+| stats count BY country
+| sort 10 -count]]></query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="charting.chart">bar</option>
+        <option name="charting.axisTitleX.visibility">collapsed</option>
+        <option name="charting.axisTitleY.visibility">collapsed</option>
+        <option name="charting.legend.placement">none</option>
+        <option name="charting.seriesColors">[0xA80C28]</option>
+        <option name="charting.drilldown">none</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>How plates are entered</title>
+      <chart>
+        <search>
+          <query><![CDATA[`ptf_events` (event_type="lookup" OR event_type="unknown_plate")
+| eval entered_via=coalesce(entered_via, "not recorded")
+| stats count BY entered_via]]></query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="charting.chart">pie</option>
+        <option name="charting.drilldown">none</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Where visitors connect from</title>
+      <table>
+        <search>
+          <query><![CDATA[`ptf_events`
+| stats dc(src_ip_hash) AS Visitors count AS Events BY src_country
+| sort 10 -Visitors
+| rename src_country AS "Country (CF-IPCountry)"]]></query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="count">10</option>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+</form>

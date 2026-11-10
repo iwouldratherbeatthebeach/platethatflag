@@ -713,6 +713,7 @@ main { flex: 1 0 auto; }
 .message strong { display: block; }
 .message p { color: inherit; }
 .message .text-button { color: inherit; }
+.message__status { margin-top: 6px; font-size: var(--fs-small); font-weight: 600; }
 .message--notice { background: var(--notice-soft); border-color: var(--notice-edge); color: var(--notice-ink); }
 .message--error { background: var(--negative-soft); color: var(--negative-ink); }
 .message--success { background: var(--positive-soft); color: var(--positive-ink); }

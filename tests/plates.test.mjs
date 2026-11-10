@@ -126,11 +126,30 @@ test("a plate whose letters are not a listed code keeps its role letter", () => 
   assert.deepEqual(parts(decodePlate("DGK 0001", index)), { code: null, prefix: "D", countryCode: "GK", suffix: "", serial: "0001", country: "", role: "Diplomat" });
   assert.deepEqual(parts(decodePlate("0001 GKD", index)), { code: null, prefix: "", countryCode: "GK", suffix: "D", serial: "0001", country: "", role: "UN Diplomat" });
   assert.deepEqual(parts(decodePlate("SGK", index)), { code: null, prefix: "S", countryCode: "GK", suffix: "", serial: "", country: "", role: "Staff" });
+  // serial first is a UN plate: its D comes last even when the letters start with a role letter
+  assert.equal(index.map.has("CZD"), false);
+  assert.deepEqual(parts(decodePlate("1034 CZD", index)), { code: null, prefix: "", countryCode: "CZ", suffix: "D", serial: "1034", country: "", role: "UN Diplomat" });
+  assert.deepEqual(parts(decodePlate("CZD 1034", index)), { code: null, prefix: "C", countryCode: "ZD", suffix: "", serial: "1034", country: "", role: "Consul" });
   assert.equal(index.map.has("ZZ"), false);
   assert.deepEqual(parts(decodePlate("ZZ 1234", index)), { code: null, prefix: "", countryCode: "ZZ", suffix: "", serial: "1234", country: "", role: "" });
   // listed codes are unaffected: DG alone is still Ecuador, DDG still an Ecuadorian diplomat
   assert.equal(decodePlate("DG 0001", index).country, "Ecuador");
   assert.deepEqual(parts(decodePlate("DDG 0001", index)), { code: "DDG", prefix: "D", countryCode: "DG", suffix: "", serial: "0001", country: "Ecuador", role: "Diplomat" });
+});
+
+test("the Functions read an unlisted plate's parts the way the page does (Splunk groups by them)", async () => {
+  const { plateParts } = await import("../functions/_lib/plate.js");
+  let compared = 0;
+  for (const plate of samplePlates()) {
+    if (extractCode(plate, index) || !letterBlock(plate)) continue;
+    const page = decodePlate(plate, index);
+    const server = plateParts(plate);
+    assert.equal(server.code, page.countryCode, `code of ${JSON.stringify(plate)}`);
+    assert.equal(server.mission_role, page.role, `role of ${JSON.stringify(plate)}`);
+    assert.equal(server.serial, page.serial, `serial of ${JSON.stringify(plate)}`);
+    compared++;
+  }
+  assert.ok(compared > 500, `${compared} unlisted plates compared`);
 });
 
 test("decodePlate splits role letter, country code and serial", () => {

@@ -1,0 +1,112 @@
+<form version="1.1">
+  <label>Sign-ins and errors</label>
+  <description>Sign-in attempts, new accounts and sign-outs, and the Functions that answered 500. Visitors are identified by a hash of their IP address; the site never sends the address itself, or any password.</description>
+  <fieldset submitButton="false" autoRun="true">
+    <input type="time" token="time" searchWhenChanged="true">
+      <label>Time range</label>
+      <default>
+        <earliest>-7d@d</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>Sign-in attempts</title>
+      <chart>
+        <search>
+          <query><![CDATA[`ptf_events` event_type="login" | timechart count BY action]]></query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.stackMode">stacked</option>
+        <option name="charting.axisTitleX.visibility">collapsed</option>
+        <option name="charting.axisTitleY.visibility">collapsed</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="charting.fieldColors">{"success": 0x1D7A4B, "failure": 0xB42318}</option>
+        <option name="charting.drilldown">none</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Why sign-ins failed</title>
+      <chart>
+        <search>
+          <query><![CDATA[`ptf_events` event_type="login" action="failure" | stats count BY reason]]></query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="charting.chart">pie</option>
+        <option name="charting.drilldown">none</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Visitors with the most failed sign-ins</title>
+      <table>
+        <search>
+          <query><![CDATA[`ptf_events` event_type="login" action="failure"
+| stats count AS failures dc(user) AS accounts values(user) AS tried values(src_country) AS countries max(_time) AS last_attempt BY src_ip_hash
+| sort 10 -failures
+| eval last_attempt=strftime(last_attempt, "%Y-%m-%d %H:%M"), tried=mvjoin(mvindex(tried, 0, 4), ", ")
+| rename src_ip_hash AS "Visitor (IP hash)", failures AS Failures, accounts AS Accounts, tried AS "Usernames tried", countries AS "Connecting from", last_attempt AS "Last attempt"]]></query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="count">10</option>
+        <option name="wrap">true</option>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+    <panel>
+      <title>Accounts</title>
+      <table>
+        <search>
+          <query><![CDATA[`ptf_events` (event_type="signup" OR event_type="logout")
+| eval what=case(event_type=="signup" AND action=="success", "Accounts created", event_type=="signup", "Sign-ups refused (".coalesce(reason, "no reason").")", true(), "Sign-outs")
+| stats count AS Count BY what
+| rename what AS Activity]]></query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Server errors</title>
+      <chart>
+        <search>
+          <query><![CDATA[`ptf_events` event_type="error" | timechart count BY uri_path]]></query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.stackMode">stacked</option>
+        <option name="charting.axisTitleX.visibility">collapsed</option>
+        <option name="charting.axisTitleY.visibility">collapsed</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="charting.drilldown">none</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Latest errors</title>
+      <table>
+        <search>
+          <query><![CDATA[`ptf_events` event_type="error"
+| sort 0 -_time
+| eval when=strftime(_time, "%Y-%m-%d %H:%M:%S")
+| table when uri_path error cf_ray cf_colo
+| rename when AS Time, uri_path AS Path, error AS Error, cf_ray AS "CF-Ray", cf_colo AS Colo]]></query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="count">10</option>
+        <option name="wrap">true</option>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+</form>

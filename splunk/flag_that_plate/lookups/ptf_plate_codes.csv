@@ -1,0 +1,1077 @@
+plate_code,base_code,role_letter,mission_role,country
+AA,AA,,,Republic of the Congo
+CAA,AA,C,Consul,Republic of the Congo
+DAA,AA,D,Diplomat,Republic of the Congo
+SAA,AA,S,Staff,Republic of the Congo
+AAD,AA,D,UN Diplomat,Republic of the Congo
+AC,AC,,,Cote d'Ivoire
+CAC,AC,C,Consul,Cote d'Ivoire
+DAC,AC,D,Diplomat,Cote d'Ivoire
+SAC,AC,S,Staff,Cote d'Ivoire
+ACD,AC,D,UN Diplomat,Cote d'Ivoire
+AE,AE,,,Uzbekistan
+CAE,AE,C,Consul,Uzbekistan
+DAE,AE,D,Diplomat,Uzbekistan
+SAE,AE,S,Staff,Uzbekistan
+AED,AE,D,UN Diplomat,Uzbekistan
+AF,AF,,,Japan
+CAF,AF,C,Consul,Japan
+DAF,AF,D,Diplomat,Japan
+SAF,AF,S,Staff,Japan
+AFD,AF,D,UN Diplomat,Japan
+AH,AH,,,Madagascar
+CAH,AH,C,Consul,Madagascar
+DAH,AH,D,Diplomat,Madagascar
+SAH,AH,S,Staff,Madagascar
+AHD,AH,D,UN Diplomat,Madagascar
+AJ,AJ,,,Panama
+CAJ,AJ,C,Consul,Panama
+DAJ,AJ,D,Diplomat,Panama
+SAJ,AJ,S,Staff,Panama
+AJD,AJ,D,UN Diplomat,Panama
+AK,AK,,,Cape Verde
+CAK,AK,C,Consul,Cape Verde
+DAK,AK,D,Diplomat,Cape Verde
+SAK,AK,S,Staff,Cape Verde
+AKD,AK,D,UN Diplomat,Cape Verde
+AQ,AQ,,,Syria
+CAQ,AQ,C,Consul,Syria
+DAQ,AQ,D,Diplomat,Syria
+SAQ,AQ,S,Staff,Syria
+AQD,AQ,D,UN Diplomat,Syria
+AU,AU,,,Uganda
+CAU,AU,C,Consul,Uganda
+DAU,AU,D,Diplomat,Uganda
+SAU,AU,S,Staff,Uganda
+AUD,AU,D,UN Diplomat,Uganda
+AV,AV,,,Israel
+CAV,AV,C,Consul,Israel
+DAV,AV,D,Diplomat,Israel
+SAV,AV,S,Staff,Israel
+AVD,AV,D,UN Diplomat,Israel
+AX,AX,,,Marshall Islands
+CAX,AX,C,Consul,Marshall Islands
+DAX,AX,D,Diplomat,Marshall Islands
+SAX,AX,S,Staff,Marshall Islands
+AXD,AX,D,UN Diplomat,Marshall Islands
+BL,BL,,,South Africa
+CBL,BL,C,Consul,South Africa
+DBL,BL,D,Diplomat,South Africa
+SBL,BL,S,Staff,South Africa
+BLD,BL,D,UN Diplomat,South Africa
+BV,BV,,,Solomon Islands
+CBV,BV,C,Consul,Solomon Islands
+DBV,BV,D,Diplomat,Solomon Islands
+SBV,BV,S,Staff,Solomon Islands
+BVD,BV,D,UN Diplomat,Solomon Islands
+BW,BW,,,World Bank
+CBW,BW,C,Consul,World Bank
+DBW,BW,D,Diplomat,World Bank
+SBW,BW,S,Staff,World Bank
+BWD,BW,D,UN Diplomat,World Bank
+CB,CB,,,Cambodia
+CCB,CB,C,Consul,Cambodia
+DCB,CB,D,Diplomat,Cambodia
+SCB,CB,S,Staff,Cambodia
+CBD,CB,D,UN Diplomat,Cambodia
+CC,CC,,,Ethiopia
+CCC,CC,C,Consul,Ethiopia
+DCC,CC,D,Diplomat,Ethiopia
+SCC,CC,S,Staff,Ethiopia
+CCD,CC,D,UN Diplomat,Ethiopia
+CG,CG,,,Marshall Islands
+CCG,CG,C,Consul,Marshall Islands
+DCG,CG,D,Diplomat,Marshall Islands
+SCG,CG,S,Staff,Marshall Islands
+CGD,CG,D,UN Diplomat,Marshall Islands
+CK,CK,,,Namibia
+CCK,CK,C,Consul,Namibia
+DCK,CK,D,Diplomat,Namibia
+SCK,CK,S,Staff,Namibia
+CKD,CK,D,UN Diplomat,Namibia
+CM,CM,,,Micronesia
+CCM,CM,C,Consul,Micronesia
+DCM,CM,D,Diplomat,Micronesia
+SCM,CM,S,Staff,Micronesia
+CMD,CM,D,UN Diplomat,Micronesia
+CN,CN,,,International Organization
+CCN,CN,C,Consul,International Organization
+DCN,CN,D,Diplomat,International Organization
+SCN,CN,S,Staff,International Organization
+CND,CN,D,UN Diplomat,International Organization
+CS,CS,,,Afghanistan
+CCS,CS,C,Consul,Afghanistan
+DCS,CS,D,Diplomat,Afghanistan
+SCS,CS,S,Staff,Afghanistan
+CSD,CS,D,UN Diplomat,Afghanistan
+CT,CT,,,Bhutan
+CCT,CT,C,Consul,Bhutan
+DCT,CT,D,Diplomat,Bhutan
+SCT,CT,S,Staff,Bhutan
+CTD,CT,D,UN Diplomat,Bhutan
+CU,CU,,,Botswana
+CCU,CU,C,Consul,Botswana
+DCU,CU,D,Diplomat,Botswana
+SCU,CU,S,Staff,Botswana
+CUD,CU,D,UN Diplomat,Botswana
+CV,CV,,,Myanmar (Burma)
+CCV,CV,C,Consul,Myanmar (Burma)
+DCV,CV,D,Diplomat,Myanmar (Burma)
+SCV,CV,S,Staff,Myanmar (Burma)
+CVD,CV,D,UN Diplomat,Myanmar (Burma)
+CW,CW,,,Cameroon
+CCW,CW,C,Consul,Cameroon
+DCW,CW,D,Diplomat,Cameroon
+SCW,CW,S,Staff,Cameroon
+CWD,CW,D,UN Diplomat,Cameroon
+CX,CX,,,Burundi
+CCX,CX,C,Consul,Burundi
+DCX,CX,D,Diplomat,Burundi
+SCX,CX,S,Staff,Burundi
+CXD,CX,D,UN Diplomat,Burundi
+CY,CY,,,People's Republic of China
+CCY,CY,C,Consul,People's Republic of China
+DCY,CY,D,Diplomat,People's Republic of China
+SCY,CY,S,Staff,People's Republic of China
+CYD,CY,D,UN Diplomat,People's Republic of China
+DA,DA,,,Colombia
+CDA,DA,C,Consul,Colombia
+DDA,DA,D,Diplomat,Colombia
+SDA,DA,S,Staff,Colombia
+DAD,DA,D,UN Diplomat,Colombia
+DB,DB,,,Costa Rica
+CDB,DB,C,Consul,Costa Rica
+DDB,DB,D,Diplomat,Costa Rica
+SDB,DB,S,Staff,Costa Rica
+DBD,DB,D,UN Diplomat,Costa Rica
+DC,DC,,,Cuba (UN only)
+CDC,DC,C,Consul,Cuba (UN only)
+DDC,DC,D,Diplomat,Cuba (UN only)
+SDC,DC,S,Staff,Cuba (UN only)
+DCD,DC,D,UN Diplomat,Cuba (UN only)
+DD,DD,,,Cyprus
+CDD,DD,C,Consul,Cyprus
+DDD,DD,D,Diplomat,Cyprus
+SDD,DD,S,Staff,Cyprus
+DDD,DD,D,UN Diplomat,Cyprus
+DF,DF,,,Dominican Republic
+CDF,DF,C,Consul,Dominican Republic
+DDF,DF,D,Diplomat,Dominican Republic
+SDF,DF,S,Staff,Dominican Republic
+DFD,DF,D,UN Diplomat,Dominican Republic
+DG,DG,,,Ecuador
+CDG,DG,C,Consul,Ecuador
+DDG,DG,D,Diplomat,Ecuador
+SDG,DG,S,Staff,Ecuador
+DGD,DG,D,UN Diplomat,Ecuador
+DH,DH,,,Cote d'Ivoire
+CDH,DH,C,Consul,Cote d'Ivoire
+DDH,DH,D,Diplomat,Cote d'Ivoire
+SDH,DH,S,Staff,Cote d'Ivoire
+DHD,DH,D,UN Diplomat,Cote d'Ivoire
+DI,DI,,,South Africa
+CDI,DI,C,Consul,South Africa
+DDI,DI,D,Diplomat,South Africa
+SDI,DI,S,Staff,South Africa
+DID,DI,D,UN Diplomat,South Africa
+DJ,DJ,,,France
+CDJ,DJ,C,Consul,France
+DDJ,DJ,D,Diplomat,France
+SDJ,DJ,S,Staff,France
+DJD,DJ,D,UN Diplomat,France
+DK,DK,,,Greece
+CDK,DK,C,Consul,Greece
+DDK,DK,D,Diplomat,Greece
+SDK,DK,S,Staff,Greece
+DKD,DK,D,UN Diplomat,Greece
+DL,DL,,,India
+CDL,DL,C,Consul,India
+DDL,DL,D,Diplomat,India
+SDL,DL,S,Staff,India
+DLD,DL,D,UN Diplomat,India
+DM,DM,,,Iran (UN only)
+CDM,DM,C,Consul,Iran (UN only)
+DDM,DM,D,Diplomat,Iran (UN only)
+SDM,DM,S,Staff,Iran (UN only)
+DMD,DM,D,UN Diplomat,Iran (UN only)
+DN,DN,,,Denmark
+CDN,DN,C,Consul,Denmark
+DDN,DN,D,Diplomat,Denmark
+SDN,DN,S,Staff,Denmark
+DND,DN,D,UN Diplomat,Denmark
+DP,DP,,,Bangladesh
+CDP,DP,C,Consul,Bangladesh
+DDP,DP,D,Diplomat,Bangladesh
+SDP,DP,S,Staff,Bangladesh
+DPD,DP,D,UN Diplomat,Bangladesh
+DR,DR,,,Slovakia
+CDR,DR,C,Consul,Slovakia
+DDR,DR,D,Diplomat,Slovakia
+SDR,DR,S,Staff,Slovakia
+DRD,DR,D,UN Diplomat,Slovakia
+DZ,DZ,,,Palau
+CDZ,DZ,C,Consul,Palau
+DDZ,DZ,D,Diplomat,Palau
+SDZ,DZ,S,Staff,Palau
+DZD,DZ,D,UN Diplomat,Palau
+FF,FF,,,Antigua & Barbuda
+CFF,FF,C,Consul,Antigua & Barbuda
+DFF,FF,D,Diplomat,Antigua & Barbuda
+SFF,FF,S,Staff,Antigua & Barbuda
+FFD,FF,D,UN Diplomat,Antigua & Barbuda
+FG,FG,,,Central African Republic
+CFG,FG,C,Consul,Central African Republic
+DFG,FG,D,Diplomat,Central African Republic
+SFG,FG,S,Staff,Central African Republic
+FGD,FG,D,UN Diplomat,Central African Republic
+FH,FH,,,Ireland
+CFH,FH,C,Consul,Ireland
+DFH,FH,D,Diplomat,Ireland
+SFH,FH,S,Staff,Ireland
+FHD,FH,D,UN Diplomat,Ireland
+FJ,FJ,,,Lebanon
+CFJ,FJ,C,Consul,Lebanon
+DFJ,FJ,D,Diplomat,Lebanon
+SFJ,FJ,S,Staff,Lebanon
+FJD,FJ,D,UN Diplomat,Lebanon
+FK,FK,,,Kenya
+CFK,FK,C,Consul,Kenya
+DFK,FK,D,Diplomat,Kenya
+SFK,FK,S,Staff,Kenya
+FKD,FK,D,UN Diplomat,Kenya
+FL,FL,,,Liberia
+CFL,FL,C,Consul,Liberia
+DFL,FL,D,Diplomat,Liberia
+SFL,FL,S,Staff,Liberia
+FLD,FL,D,UN Diplomat,Liberia
+FM,FM,,,Libya
+CFM,FM,C,Consul,Libya
+DFM,FM,D,Diplomat,Libya
+SFM,FM,S,Staff,Libya
+FMD,FM,D,UN Diplomat,Libya
+FN,FN,,,Malta
+CFN,FN,C,Consul,Malta
+DFN,FN,D,Diplomat,Malta
+SFN,FN,S,Staff,Malta
+FND,FN,D,UN Diplomat,Malta
+FP,FP,,,Morocco
+CFP,FP,C,Consul,Morocco
+DFP,FP,D,Diplomat,Morocco
+SFP,FP,S,Staff,Morocco
+FPD,FP,D,UN Diplomat,Morocco
+FR,FR,,,Philippines
+CFR,FR,C,Consul,Philippines
+DFR,FR,D,Diplomat,Philippines
+SFR,FR,S,Staff,Philippines
+FRD,FR,D,UN Diplomat,Philippines
+FS,FS,,,Netherlands
+CFS,FS,C,Consul,Netherlands
+DFS,FS,D,Diplomat,Netherlands
+SFS,FS,S,Staff,Netherlands
+FSD,FS,D,UN Diplomat,Netherlands
+FT,FT,,,Qatar
+CFT,FT,C,Consul,Qatar
+DFT,FT,D,Diplomat,Qatar
+SFT,FT,S,Staff,Qatar
+FTD,FT,D,UN Diplomat,Qatar
+FV,FV,,,Sri Lanka
+CFV,FV,C,Consul,Sri Lanka
+DFV,FV,D,Diplomat,Sri Lanka
+SFV,FV,S,Staff,Sri Lanka
+FVD,FV,D,UN Diplomat,Sri Lanka
+FW,FW,,,Holy See
+CFW,FW,C,Consul,Holy See
+DFW,FW,D,Diplomat,Holy See
+SFW,FW,S,Staff,Holy See
+FWD,FW,D,UN Diplomat,Holy See
+FX,FX,,,Sierra Leone
+CFX,FX,C,Consul,Sierra Leone
+DFX,FX,D,Diplomat,Sierra Leone
+SFX,FX,S,Staff,Sierra Leone
+FXD,FX,D,UN Diplomat,Sierra Leone
+FZ,FZ,,,Suriname
+CFZ,FZ,C,Consul,Suriname
+DFZ,FZ,D,Diplomat,Suriname
+SFZ,FZ,S,Staff,Suriname
+FZD,FZ,D,UN Diplomat,Suriname
+GC,GC,,,Sweden
+CGC,GC,C,Consul,Sweden
+DGC,GC,D,Diplomat,Sweden
+SGC,GC,S,Staff,Sweden
+GCD,GC,D,UN Diplomat,Sweden
+GD,GD,,,Ukraine
+CGD,GD,C,Consul,Ukraine
+DGD,GD,D,Diplomat,Ukraine
+SGD,GD,S,Staff,Ukraine
+GDD,GD,D,UN Diplomat,Ukraine
+GG,GG,,,Zambia
+CGG,GG,C,Consul,Zambia
+DGG,GG,D,Diplomat,Zambia
+SGG,GG,S,Staff,Zambia
+GGD,GG,D,UN Diplomat,Zambia
+GN,GN,,,Turkey
+CGN,GN,C,Consul,Turkey
+DGN,GN,D,Diplomat,Turkey
+SGN,GN,S,Staff,Turkey
+GND,GN,D,UN Diplomat,Turkey
+GP,GP,,,Albania
+CGP,GP,C,Consul,Albania
+DGP,GP,D,Diplomat,Albania
+SGP,GP,S,Staff,Albania
+GPD,GP,D,UN Diplomat,Albania
+GQ,GQ,,,North Korea
+CGQ,GQ,C,Consul,North Korea
+DGQ,GQ,D,Diplomat,North Korea
+SGQ,GQ,S,Staff,North Korea
+GQD,GQ,D,UN Diplomat,North Korea
+GX,GX,,,Vanuatu
+CGX,GX,C,Consul,Vanuatu
+DGX,GX,D,Diplomat,Vanuatu
+SGX,GX,S,Staff,Vanuatu
+GXD,GX,D,UN Diplomat,Vanuatu
+GY,GY,,,Chile
+CGY,GY,C,Consul,Chile
+DGY,GY,D,Diplomat,Chile
+SGY,GY,S,Staff,Chile
+GYD,GY,D,UN Diplomat,Chile
+HB,HB,,,Tonga
+CHB,HB,C,Consul,Tonga
+DHB,HB,D,Diplomat,Tonga
+SHB,HB,S,Staff,Tonga
+HBD,HB,D,UN Diplomat,Tonga
+HD,HD,,,Argentina
+CHD,HD,C,Consul,Argentina
+DHD,HD,D,Diplomat,Argentina
+SHD,HD,S,Staff,Argentina
+HDD,HD,D,UN Diplomat,Argentina
+HL,HL,,,Saint Lucia
+CHL,HL,C,Consul,Saint Lucia
+DHL,HL,D,Diplomat,Saint Lucia
+SHL,HL,S,Staff,Saint Lucia
+HLD,HL,D,UN Diplomat,Saint Lucia
+HM,HM,,,Andorra
+CHM,HM,C,Consul,Andorra
+DHM,HM,D,Diplomat,Andorra
+SHM,HM,S,Staff,Andorra
+HMD,HM,D,UN Diplomat,Andorra
+HN,HN,,,Mongolia
+CHN,HN,C,Consul,Mongolia
+DHN,HN,D,Diplomat,Mongolia
+SHN,HN,S,Staff,Mongolia
+HND,HN,D,UN Diplomat,Mongolia
+HV,HV,,,Belgium
+CHV,HV,C,Consul,Belgium
+DHV,HV,D,Diplomat,Belgium
+SHV,HV,S,Staff,Belgium
+HVD,HV,D,UN Diplomat,Belgium
+HW,HW,,,Guatemala
+CHW,HW,C,Consul,Guatemala
+DHW,HW,D,Diplomat,Guatemala
+SHW,HW,S,Staff,Guatemala
+HWD,HW,D,UN Diplomat,Guatemala
+HX,HX,,,Benin
+CHX,HX,C,Consul,Benin
+DHX,HX,D,Diplomat,Benin
+SHX,HX,S,Staff,Benin
+HXD,HX,D,UN Diplomat,Benin
+HY,HY,,,Guinea Bissau
+CHY,HY,C,Consul,Guinea Bissau
+DHY,HY,D,Diplomat,Guinea Bissau
+SHY,HY,S,Staff,Guinea Bissau
+HYD,HY,D,UN Diplomat,Guinea Bissau
+HZ,HZ,,,Haiti
+CHZ,HZ,C,Consul,Haiti
+DHZ,HZ,D,Diplomat,Haiti
+SHZ,HZ,S,Staff,Haiti
+HZD,HZ,D,UN Diplomat,Haiti
+JB,JB,,,Honduras
+CJB,JB,C,Consul,Honduras
+DJB,JB,D,Diplomat,Honduras
+SJB,JB,S,Staff,Honduras
+JBD,JB,D,UN Diplomat,Honduras
+JC,JC,,,Kuwait
+CJC,JC,C,Consul,Kuwait
+DJC,JC,D,Diplomat,Kuwait
+SJC,JC,S,Staff,Kuwait
+JCD,JC,D,UN Diplomat,Kuwait
+JD,JD,,,Mauritius
+CJD,JD,C,Consul,Mauritius
+DJD,JD,D,Diplomat,Mauritius
+SJD,JD,S,Staff,Mauritius
+JDD,JD,D,UN Diplomat,Mauritius
+JF,JF,,,Nigeria
+CJF,JF,C,Consul,Nigeria
+DJF,JF,D,Diplomat,Nigeria
+SJF,JF,S,Staff,Nigeria
+JFD,JF,D,UN Diplomat,Nigeria
+JG,JG,,,Portugal
+CJG,JG,C,Consul,Portugal
+DJG,JG,D,Diplomat,Portugal
+SJG,JG,S,Staff,Portugal
+JGD,JG,D,UN Diplomat,Portugal
+JH,JH,,,Somalia
+CJH,JH,C,Consul,Somalia
+DJH,JH,D,Diplomat,Somalia
+SJH,JH,S,Staff,Somalia
+JHD,JH,D,UN Diplomat,Somalia
+JJ,JJ,,,Chad
+CJJ,JJ,C,Consul,Chad
+DJJ,JJ,D,Diplomat,Chad
+SJJ,JJ,S,Staff,Chad
+JJD,JJ,D,UN Diplomat,Chad
+JK,JK,,,Turkey
+CJK,JK,C,Consul,Turkey
+DJK,JK,D,Diplomat,Turkey
+SJK,JK,S,Staff,Turkey
+JKD,JK,D,UN Diplomat,Turkey
+JM,JM,,,Yugoslavia
+CJM,JM,C,Consul,Yugoslavia
+DJM,JM,D,Diplomat,Yugoslavia
+SJM,JM,S,Staff,Yugoslavia
+JMD,JM,D,UN Diplomat,Yugoslavia
+JP,JP,,,Tunisia
+CJP,JP,C,Consul,Tunisia
+DJP,JP,D,Diplomat,Tunisia
+SJP,JP,S,Staff,Tunisia
+JPD,JP,D,UN Diplomat,Tunisia
+JQ,JQ,,,Togo
+CJQ,JQ,C,Consul,Togo
+DJQ,JQ,D,Diplomat,Togo
+SJQ,JQ,S,Staff,Togo
+JQD,JQ,D,UN Diplomat,Togo
+JS,JS,,,Slovenia
+CJS,JS,C,Consul,Slovenia
+DJS,JS,D,Diplomat,Slovenia
+SJS,JS,S,Staff,Slovenia
+JSD,JS,D,UN Diplomat,Slovenia
+JT,JT,,,Croatia
+CJT,JT,C,Consul,Croatia
+DJT,JT,D,Diplomat,Croatia
+SJT,JT,S,Staff,Croatia
+JTD,JT,D,UN Diplomat,Croatia
+JY,JY,,,Cyprus
+CJY,JY,C,Consul,Cyprus
+DJY,JY,D,Diplomat,Cyprus
+SJY,JY,S,Staff,Cyprus
+JYD,JY,D,UN Diplomat,Cyprus
+KB,KB,,,Monaco
+CKB,KB,C,Consul,Monaco
+DKB,KB,D,Diplomat,Monaco
+SKB,KB,S,Staff,Monaco
+KBD,KB,D,UN Diplomat,Monaco
+KD,KD,,,Eritrea
+CKD,KD,C,Consul,Eritrea
+DKD,KD,D,Diplomat,Eritrea
+SKD,KD,S,Staff,Eritrea
+KDD,KD,D,UN Diplomat,Eritrea
+KG,KG,,,Equatorial Guinea
+CKG,KG,C,Consul,Equatorial Guinea
+DKG,KG,D,Diplomat,Equatorial Guinea
+SKG,KG,S,Staff,Equatorial Guinea
+KGD,KG,D,UN Diplomat,Equatorial Guinea
+KH,KH,,,Hungary
+CKH,KH,C,Consul,Hungary
+DKH,KH,D,Diplomat,Hungary
+SKH,KH,S,Staff,Hungary
+KHD,KH,D,UN Diplomat,Hungary
+KJ,KJ,,,Lithuania
+CKJ,KJ,C,Consul,Lithuania
+DKJ,KJ,D,Diplomat,Lithuania
+SKJ,KJ,S,Staff,Lithuania
+KJD,KJ,D,UN Diplomat,Lithuania
+KK,KK,,,Fiji
+CKK,KK,C,Consul,Fiji
+DKK,KK,D,Diplomat,Fiji
+SKK,KK,S,Staff,Fiji
+KKD,KK,D,UN Diplomat,Fiji
+KL,KL,,,Jordan
+CKL,KL,C,Consul,Jordan
+DKL,KL,D,Diplomat,Jordan
+SKL,KL,S,Staff,Jordan
+KLD,KL,D,UN Diplomat,Jordan
+KM,KM,,,Jamaica
+CKM,KM,C,Consul,Jamaica
+DKM,KM,D,Diplomat,Jamaica
+SKM,KM,S,Staff,Jamaica
+KMD,KM,D,UN Diplomat,Jamaica
+KN,KN,,,Gabon
+CKN,KN,C,Consul,Gabon
+DKN,KN,D,Diplomat,Gabon
+SKN,KN,S,Staff,Gabon
+KND,KN,D,UN Diplomat,Gabon
+KP,KP,,,Luxembourg
+CKP,KP,C,Consul,Luxembourg
+DKP,KP,D,Diplomat,Luxembourg
+SKP,KP,S,Staff,Luxembourg
+KPD,KP,D,UN Diplomat,Luxembourg
+KR,KR,,,Malaysia
+CKR,KR,C,Consul,Malaysia
+DKR,KR,D,Diplomat,Malaysia
+SKR,KR,S,Staff,Malaysia
+KRD,KR,D,UN Diplomat,Malaysia
+KS,KS,,,Mexico
+CKS,KS,C,Consul,Mexico
+DKS,KS,D,Diplomat,Mexico
+SKS,KS,S,Staff,Mexico
+KSD,KS,D,UN Diplomat,Mexico
+KU,KU,,,Sao Tome & Principe
+CKU,KU,C,Consul,Sao Tome & Principe
+DKU,KU,D,Diplomat,Sao Tome & Principe
+SKU,KU,S,Staff,Sao Tome & Principe
+KUD,KU,D,UN Diplomat,Sao Tome & Principe
+KV,KV,,,Saudi Arabia
+CKV,KV,C,Consul,Saudi Arabia
+DKV,KV,D,Diplomat,Saudi Arabia
+SKV,KV,S,Staff,Saudi Arabia
+KVD,KV,D,UN Diplomat,Saudi Arabia
+KW,KW,,,Seychelles
+CKW,KW,C,Consul,Seychelles
+DKW,KW,D,Diplomat,Seychelles
+SKW,KW,S,Staff,Seychelles
+KWD,KW,D,UN Diplomat,Seychelles
+KX,KX,,,Sudan
+CKX,KX,C,Consul,Sudan
+DKX,KX,D,Diplomat,Sudan
+SKX,KX,S,Staff,Sudan
+KXD,KX,D,UN Diplomat,Sudan
+LC,LC,,,Venezuela
+CLC,LC,C,Consul,Venezuela
+DLC,LC,D,Diplomat,Venezuela
+SLC,LC,S,Staff,Venezuela
+LCD,LC,D,UN Diplomat,Venezuela
+LD,LD,,,Vietnam
+CLD,LD,C,Consul,Vietnam
+DLD,LD,D,Diplomat,Vietnam
+SLD,LD,S,Staff,Vietnam
+LDD,LD,D,UN Diplomat,Vietnam
+LG,LG,,,Turkey
+CLG,LG,C,Consul,Turkey
+DLG,LG,D,Diplomat,Turkey
+SLG,LG,S,Staff,Turkey
+LGD,LG,D,UN Diplomat,Turkey
+LH,LH,,,Israel
+CLH,LH,C,Consul,Israel
+DLH,LH,D,Diplomat,Israel
+SLH,LH,S,Staff,Israel
+LHD,LH,D,UN Diplomat,Israel
+LJ,LJ,,,Israel
+CLJ,LJ,C,Consul,Israel
+DLJ,LJ,D,Diplomat,Israel
+SLJ,LJ,S,Staff,Israel
+LJD,LJ,D,UN Diplomat,Israel
+LK,LK,,,European Economic Communities
+CLK,LK,C,Consul,European Economic Communities
+DLK,LK,D,Diplomat,European Economic Communities
+SLK,LK,S,Staff,European Economic Communities
+LKD,LK,D,UN Diplomat,European Economic Communities
+LM,LM,,,Republic of Macedonia|Macedonia
+CLM,LM,C,Consul,Republic of Macedonia|Macedonia
+DLM,LM,D,Diplomat,Republic of Macedonia|Macedonia
+SLM,LM,S,Staff,Republic of Macedonia|Macedonia
+LMD,LM,D,UN Diplomat,Republic of Macedonia|Macedonia
+LR,LR,,,Bosnia-Herzegovina
+CLR,LR,C,Consul,Bosnia-Herzegovina
+DLR,LR,D,Diplomat,Bosnia-Herzegovina
+SLR,LR,S,Staff,Bosnia-Herzegovina
+LRD,LR,D,UN Diplomat,Bosnia-Herzegovina
+LW,LW,,,Germany
+CLW,LW,C,Consul,Germany
+DLW,LW,D,Diplomat,Germany
+SLW,LW,S,Staff,Germany
+LWD,LW,D,UN Diplomat,Germany
+MF,MF,,,International Monetary Fund
+CMF,MF,C,Consul,International Monetary Fund
+DMF,MF,D,Diplomat,International Monetary Fund
+SMF,MF,S,Staff,International Monetary Fund
+MFD,MF,D,UN Diplomat,International Monetary Fund
+MG,MG,,,UNKNOWN
+CMG,MG,C,Consul,UNKNOWN
+DMG,MG,D,Diplomat,UNKNOWN
+SMG,MG,S,Staff,UNKNOWN
+MGD,MG,D,UN Diplomat,UNKNOWN
+MK,MK,,,Djibouti
+CMK,MK,C,Consul,Djibouti
+DMK,MK,D,Diplomat,Djibouti
+SMK,MK,S,Staff,Djibouti
+MKD,MK,D,UN Diplomat,Djibouti
+MN,MN,,,Comoros
+CMN,MN,C,Consul,Comoros
+DMN,MN,D,Diplomat,Comoros
+SMN,MN,S,Staff,Comoros
+MND,MN,D,UN Diplomat,Comoros
+MP,MP,,,Bahamas
+CMP,MP,C,Consul,Bahamas
+DMP,MP,D,Diplomat,Bahamas
+SMP,MP,S,Staff,Bahamas
+MPD,MP,D,UN Diplomat,Bahamas
+MW,MW,,,Maldives
+CMW,MW,C,Consul,Maldives
+DMW,MW,D,Diplomat,Maldives
+SMW,MW,S,Staff,Maldives
+MWD,MW,D,UN Diplomat,Maldives
+NA,NA,,,Oman
+CNA,NA,C,Consul,Oman
+DNA,NA,D,Diplomat,Oman
+SNA,NA,S,Staff,Oman
+NAD,NA,D,UN Diplomat,Oman
+NB,NB,,,Papua New Guinea
+CNB,NB,C,Consul,Papua New Guinea
+DNB,NB,D,Diplomat,Papua New Guinea
+SNB,NB,S,Staff,Papua New Guinea
+NBD,NB,D,UN Diplomat,Papua New Guinea
+NC,NC,,,Paraguay
+CNC,NC,C,Consul,Paraguay
+DNC,NC,D,Diplomat,Paraguay
+SNC,NC,S,Staff,Paraguay
+NCD,NC,D,UN Diplomat,Paraguay
+ND,ND,,,Romania
+CND,ND,C,Consul,Romania
+DND,ND,D,Diplomat,Romania
+SND,ND,S,Staff,Romania
+NDD,ND,D,UN Diplomat,Romania
+NQ,NQ,,,Angola
+CNQ,NQ,C,Consul,Angola
+DNQ,NQ,D,Diplomat,Angola
+SNQ,NQ,S,Staff,Angola
+NQD,NQ,D,UN Diplomat,Angola
+NX,NX,,,Malaysia
+CNX,NX,C,Consul,Malaysia
+DNX,NX,D,Diplomat,Malaysia
+SNX,NX,S,Staff,Malaysia
+NXD,NX,D,UN Diplomat,Malaysia
+PA,PA,,,Austria
+CPA,PA,C,Consul,Austria
+DPA,PA,D,Diplomat,Austria
+SPA,PA,S,Staff,Austria
+PAD,PA,D,UN Diplomat,Austria
+PB,PB,,,Barbados
+CPB,PB,C,Consul,Barbados
+DPB,PB,D,Diplomat,Barbados
+SPB,PB,S,Staff,Barbados
+PBD,PB,D,UN Diplomat,Barbados
+PC,PC,,,Belize
+CPC,PC,C,Consul,Belize
+DPC,PC,D,Diplomat,Belize
+SPC,PC,S,Staff,Belize
+PCD,PC,D,UN Diplomat,Belize
+PD,PD,,,United Kingdom
+CPD,PD,C,Consul,United Kingdom
+DPD,PD,D,Diplomat,United Kingdom
+SPD,PD,S,Staff,United Kingdom
+PDD,PD,D,UN Diplomat,United Kingdom
+PF,PF,,,Bolivia
+CPF,PF,C,Consul,Bolivia
+DPF,PF,D,Diplomat,Bolivia
+SPF,PF,S,Staff,Bolivia
+PFD,PF,D,UN Diplomat,Bolivia
+PG,PG,,,Belarus
+CPG,PG,C,Consul,Belarus
+DPG,PG,D,Diplomat,Belarus
+SPG,PG,S,Staff,Belarus
+PGD,PG,D,UN Diplomat,Belarus
+PK,PK,,,Norway
+CPK,PK,C,Consul,Norway
+DPK,PK,D,Diplomat,Norway
+SPK,PK,S,Staff,Norway
+PKD,PK,D,UN Diplomat,Norway
+PL,PL,,,Chile
+CPL,PL,C,Consul,Chile
+DPL,PL,D,Diplomat,Chile
+SPL,PL,S,Staff,Chile
+PLD,PL,D,UN Diplomat,Chile
+PM,PM,,,Brunei
+CPM,PM,C,Consul,Brunei
+DPM,PM,D,Diplomat,Brunei
+SPM,PM,S,Staff,Brunei
+PMD,PM,D,UN Diplomat,Brunei
+PR,PR,,,Argentina
+CPR,PR,C,Consul,Argentina
+DPR,PR,D,Diplomat,Argentina
+SPR,PR,S,Staff,Argentina
+PRD,PR,D,UN Diplomat,Argentina
+PS,PS,,,Zimbabwe
+CPS,PS,C,Consul,Zimbabwe
+DPS,PS,D,Diplomat,Zimbabwe
+SPS,PS,S,Staff,Zimbabwe
+PSD,PS,D,UN Diplomat,Zimbabwe
+PV,PV,,,Zaire
+CPV,PV,C,Consul,Zaire
+DPV,PV,D,Diplomat,Zaire
+SPV,PV,S,Staff,Zaire
+PVD,PV,D,UN Diplomat,Zaire
+QD,QD,,,Burkina Faso
+CQD,QD,C,Consul,Burkina Faso
+DQD,QD,D,Diplomat,Burkina Faso
+SQD,QD,S,Staff,Burkina Faso
+QDD,QD,D,UN Diplomat,Burkina Faso
+QL,QL,,,St. Kitts & Nevis
+CQL,QL,C,Consul,St. Kitts & Nevis
+DQL,QL,D,Diplomat,St. Kitts & Nevis
+SQL,QL,S,Staff,St. Kitts & Nevis
+QLD,QL,D,UN Diplomat,St. Kitts & Nevis
+QM,QM,,,Bulgaria
+CQM,QM,C,Consul,Bulgaria
+DQM,QM,D,Diplomat,Bulgaria
+SQM,QM,S,Staff,Bulgaria
+QMD,QM,D,UN Diplomat,Bulgaria
+QN,QN,,,Laos
+CQN,QN,C,Consul,Laos
+DQN,QN,D,Diplomat,Laos
+SQN,QN,S,Staff,Laos
+QND,QN,D,UN Diplomat,Laos
+QP,QP,,,Latvia
+CQP,QP,C,Consul,Latvia
+DQP,QP,D,Diplomat,Latvia
+SQP,QP,S,Staff,Latvia
+QPD,QP,D,UN Diplomat,Latvia
+QQ,QQ,,,Lesotho
+CQQ,QQ,C,Consul,Lesotho
+DQQ,QQ,D,Diplomat,Lesotho
+SQQ,QQ,S,Staff,Lesotho
+QQD,QQ,D,UN Diplomat,Lesotho
+QR,QR,,,Malawi
+CQR,QR,C,Consul,Malawi
+DQR,QR,D,Diplomat,Malawi
+SQR,QR,S,Staff,Malawi
+QRD,QR,D,UN Diplomat,Malawi
+QS,QS,,,Mozambique
+CQS,QS,C,Consul,Mozambique
+DQS,QS,D,Diplomat,Mozambique
+SQS,QS,S,Staff,Mozambique
+QSD,QS,D,UN Diplomat,Mozambique
+QT,QT,,,New Zealand
+CQT,QT,C,Consul,New Zealand
+DQT,QT,D,Diplomat,New Zealand
+SQT,QT,S,Staff,New Zealand
+QTD,QT,D,UN Diplomat,New Zealand
+QU,QU,,,Nicaragua
+CQU,QU,C,Consul,Nicaragua
+DQU,QU,D,Diplomat,Nicaragua
+SQU,QU,S,Staff,Nicaragua
+QUD,QU,D,UN Diplomat,Nicaragua
+QV,QV,,,Niger
+CQV,QV,C,Consul,Niger
+DQV,QV,D,Diplomat,Niger
+SQV,QV,S,Staff,Niger
+QVD,QV,D,UN Diplomat,Niger
+QW,QW,,,Poland
+CQW,QW,C,Consul,Poland
+DQW,QW,D,Diplomat,Poland
+SQW,QW,S,Staff,Poland
+QWD,QW,D,UN Diplomat,Poland
+QX,QX,,,Pakistan
+CQX,QX,C,Consul,Pakistan
+DQX,QX,D,Diplomat,Pakistan
+SQX,QX,S,Staff,Pakistan
+QXD,QX,D,UN Diplomat,Pakistan
+QX,QX,,,Iran (DC only)
+CQX,QX,C,Consul,Iran (DC only)
+DQX,QX,D,Diplomat,Iran (DC only)
+SQX,QX,S,Staff,Iran (DC only)
+QXD,QX,D,UN Diplomat,Iran (DC only)
+QY,QY,,,Yemen
+CQY,QY,C,Consul,Yemen
+DQY,QY,D,Diplomat,Yemen
+SQY,QY,S,Staff,Yemen
+QYD,QY,D,UN Diplomat,Yemen
+QZ,QZ,,,Indonesia
+CQZ,QZ,C,Consul,Indonesia
+DQZ,QZ,D,Diplomat,Indonesia
+SQZ,QZ,S,Staff,Indonesia
+QZD,QZ,D,UN Diplomat,Indonesia
+RB,RB,,,Rwanda
+CRB,RB,C,Consul,Rwanda
+DRB,RB,D,Diplomat,Rwanda
+SRB,RB,S,Staff,Rwanda
+RBD,RB,D,UN Diplomat,Rwanda
+RC,RC,,,Saint Vincent and the Grenadines
+CRC,RC,C,Consul,Saint Vincent and the Grenadines
+DRC,RC,D,Diplomat,Saint Vincent and the Grenadines
+SRC,RC,S,Staff,Saint Vincent and the Grenadines
+RCD,RC,D,UN Diplomat,Saint Vincent and the Grenadines
+RD,RD,,,Senegal
+CRD,RD,C,Consul,Senegal
+DRD,RD,D,Diplomat,Senegal
+SRD,RD,S,Staff,Senegal
+RDD,RD,D,UN Diplomat,Senegal
+RL,RL,,,Uruguay
+CRL,RL,C,Consul,Uruguay
+DRL,RL,D,Diplomat,Uruguay
+SRL,RL,S,Staff,Uruguay
+RLD,RL,D,UN Diplomat,Uruguay
+RV,RV,,,San Marino
+CRV,RV,C,Consul,San Marino
+DRV,RV,D,Diplomat,San Marino
+SRV,RV,S,Staff,San Marino
+RVD,RV,D,UN Diplomat,San Marino
+SF,SF,,,Czech Republic
+CSF,SF,C,Consul,Czech Republic
+DSF,SF,D,Diplomat,Czech Republic
+SSF,SF,S,Staff,Czech Republic
+SFD,SF,D,UN Diplomat,Czech Republic
+SG,SG,,,Israel
+CSG,SG,C,Consul,Israel
+DSG,SG,D,Diplomat,Israel
+SSG,SG,S,Staff,Israel
+SGD,SG,D,UN Diplomat,Israel
+ST,ST,,,Dominica
+CST,ST,C,Consul,Dominica
+DST,ST,D,Diplomat,Dominica
+SST,ST,S,Staff,Dominica
+STD,ST,D,UN Diplomat,Dominica
+TF,TF,,,Algeria
+CTF,TF,C,Consul,Algeria
+DTF,TF,D,Diplomat,Algeria
+STF,TF,S,Staff,Algeria
+TFD,TF,D,UN Diplomat,Algeria
+TF,TF,,,Iraq (DC only)
+CTF,TF,C,Consul,Iraq (DC only)
+DTF,TF,D,Diplomat,Iraq (DC only)
+STF,TF,S,Staff,Iraq (DC only)
+TFD,TF,D,UN Diplomat,Iraq (DC only)
+TG,TG,,,Canada
+CTG,TG,C,Consul,Canada
+DTG,TG,D,Diplomat,Canada
+STG,TG,S,Staff,Canada
+TGD,TG,D,UN Diplomat,Canada
+TH,TH,,,Egypt
+CTH,TH,C,Consul,Egypt
+DTH,TH,D,Diplomat,Egypt
+STH,TH,S,Staff,Egypt
+THD,TH,D,UN Diplomat,Egypt
+TK,TK,,,Liechtenstein
+CTK,TK,C,Consul,Liechtenstein
+DTK,TK,D,Diplomat,Liechtenstein
+STK,TK,S,Staff,Liechtenstein
+TKD,TK,D,UN Diplomat,Liechtenstein
+TL,TL,,,El Salvador
+CTL,TL,C,Consul,El Salvador
+DTL,TL,D,Diplomat,El Salvador
+STL,TL,S,Staff,El Salvador
+TLD,TL,D,UN Diplomat,El Salvador
+TM,TM,,,Iceland
+CTM,TM,C,Consul,Iceland
+DTM,TM,D,Diplomat,Iceland
+STM,TM,S,Staff,Iceland
+TMD,TM,D,UN Diplomat,Iceland
+TN,TN,,,Nepal
+CTN,TN,C,Consul,Nepal
+DTN,TN,D,Diplomat,Nepal
+STN,TN,S,Staff,Nepal
+TND,TN,D,UN Diplomat,Nepal
+TP,TP,,,Mauritania
+CTP,TP,C,Consul,Mauritania
+DTP,TP,D,Diplomat,Mauritania
+STP,TP,S,Staff,Mauritania
+TPD,TP,D,UN Diplomat,Mauritania
+TQ,TQ,,,Mali
+CTQ,TQ,C,Consul,Mali
+DTQ,TQ,D,Diplomat,Mali
+STQ,TQ,S,Staff,Mali
+TQD,TQ,D,UN Diplomat,Mali
+TR,TR,,,Italy
+CTR,TR,C,Consul,Italy
+DTR,TR,D,Diplomat,Italy
+STR,TR,S,Staff,Italy
+TRD,TR,D,UN Diplomat,Italy
+TS,TS,,,Iraq (UN only)
+CTS,TS,C,Consul,Iraq (UN only)
+DTS,TS,D,Diplomat,Iraq (UN only)
+STS,TS,S,Staff,Iraq (UN only)
+TSD,TS,D,UN Diplomat,Iraq (UN only)
+TT,TT,,,Guyana
+CTT,TT,C,Consul,Guyana
+DTT,TT,D,Diplomat,Guyana
+STT,TT,S,Staff,Guyana
+TTD,TT,D,UN Diplomat,Guyana
+TU,TU,,,Guinea
+CTU,TU,C,Consul,Guinea
+DTU,TU,D,Diplomat,Guinea
+STU,TU,S,Staff,Guinea
+TUD,TU,D,UN Diplomat,Guinea
+TV,TV,,,Ghana
+CTV,TV,C,Consul,Ghana
+DTV,TV,D,Diplomat,Ghana
+STV,TV,S,Staff,Ghana
+TVD,TV,D,UN Diplomat,Ghana
+TW,TW,,,Gambia
+CTW,TW,C,Consul,Gambia
+DTW,TW,D,Diplomat,Gambia
+STW,TW,S,Staff,Gambia
+TWD,TW,D,UN Diplomat,Gambia
+TX,TX,,,Finland
+CTX,TX,C,Consul,Finland
+DTX,TX,D,Diplomat,Finland
+STX,TX,S,Staff,Finland
+TXD,TX,D,UN Diplomat,Finland
+TY,TY,,,Grenada
+CTY,TY,C,Consul,Grenada
+DTY,TY,D,Diplomat,Grenada
+STY,TY,S,Staff,Grenada
+TYD,TY,D,UN Diplomat,Grenada
+TZ,TZ,,,Peru
+CTZ,TZ,C,Consul,Peru
+DTZ,TZ,D,Diplomat,Peru
+STZ,TZ,S,Staff,Peru
+TZD,TZ,D,UN Diplomat,Peru
+UA,UA,,,Bahrain
+CUA,UA,C,Consul,Bahrain
+DUA,UA,D,Diplomat,Bahrain
+SUA,UA,S,Staff,Bahrain
+UAD,UA,D,UN Diplomat,Bahrain
+UF,UF,,,Estonia
+CUF,UF,C,Consul,Estonia
+DUF,UF,D,Diplomat,Estonia
+SUF,UF,S,Staff,Estonia
+UFD,UF,D,UN Diplomat,Estonia
+UH,UH,,,Spain
+CUH,UH,C,Consul,Spain
+DUH,UH,D,Diplomat,Spain
+SUH,UH,S,Staff,Spain
+UHD,UH,D,UN Diplomat,Spain
+UX,UX,,,Trinidad & Tobago
+CUX,UX,C,Consul,Trinidad & Tobago
+DUX,UX,D,Diplomat,Trinidad & Tobago
+SUX,UX,S,Staff,Trinidad & Tobago
+UXD,UX,D,UN Diplomat,Trinidad & Tobago
+VF,VF,,,Thailand
+CVF,VF,C,Consul,Thailand
+DVF,VF,D,Diplomat,Thailand
+SVF,VF,S,Staff,Thailand
+VFD,VF,D,UN Diplomat,Thailand
+VG,VG,,,Tanzania
+CVG,VG,C,Consul,Tanzania
+DVG,VG,D,Diplomat,Tanzania
+SVG,VG,S,Staff,Tanzania
+VGD,VG,D,UN Diplomat,Tanzania
+VH,VH,,,Switzerland
+CVH,VH,C,Consul,Switzerland
+DVH,VH,D,Diplomat,Switzerland
+SVH,VH,S,Staff,Switzerland
+VHD,VH,D,UN Diplomat,Switzerland
+VJ,VJ,,,Brazil
+CVJ,VJ,C,Consul,Brazil
+DVJ,VJ,D,Diplomat,Brazil
+SVJ,VJ,S,Staff,Brazil
+VJD,VJ,D,UN Diplomat,Brazil
+VK,VK,,,Singapore
+CVK,VK,C,Consul,Singapore
+DVK,VK,D,Diplomat,Singapore
+SVK,VK,S,Staff,Singapore
+VKD,VK,D,UN Diplomat,Singapore
+VL,VL,,,Swaziland
+CVL,VL,C,Consul,Swaziland
+DVL,VL,D,Diplomat,Swaziland
+SVL,VL,S,Staff,Swaziland
+VLD,VL,D,UN Diplomat,Swaziland
+VM,VM,,,Nauru
+CVM,VM,C,Consul,Nauru
+DVM,VM,D,Diplomat,Nauru
+SVM,VM,S,Staff,Nauru
+VMD,VM,D,UN Diplomat,Nauru
+WB,WB,,,United Arab Emirates
+CWB,WB,C,Consul,United Arab Emirates
+DWB,WB,D,Diplomat,United Arab Emirates
+SWB,WB,S,Staff,United Arab Emirates
+WBD,WB,D,UN Diplomat,United Arab Emirates
+WD,WD,,,South Korea
+CWD,WD,C,Consul,South Korea
+DWD,WD,D,Diplomat,South Korea
+SWD,WD,S,Staff,South Korea
+WDD,WD,D,UN Diplomat,South Korea
+WM,WM,,,Western Samoa
+CWM,WM,C,Consul,Western Samoa
+DWM,WM,D,Diplomat,Western Samoa
+SWM,WM,S,Staff,Western Samoa
+WMD,WM,D,UN Diplomat,Western Samoa
+WZ,WZ,,,United Kingdom
+CWZ,WZ,C,Consul,United Kingdom
+DWZ,WZ,D,Diplomat,United Kingdom
+SWZ,WZ,S,Staff,United Kingdom
+WZD,WZ,D,UN Diplomat,United Kingdom
+XA,XA,,,Bangladesh
+CXA,XA,C,Consul,Bangladesh
+DXA,XA,D,Diplomat,Bangladesh
+SXA,XA,S,Staff,Bangladesh
+XAD,XA,D,UN Diplomat,Bangladesh
+XC,XC,,,Fiji
+CXC,XC,C,Consul,Fiji
+DXC,XC,D,Diplomat,Fiji
+SXC,XC,S,Staff,Fiji
+XCD,XC,D,UN Diplomat,Fiji
+XD,XD,,,Myanmar
+CXD,XD,C,Consul,Myanmar
+DXD,XD,D,Diplomat,Myanmar
+SXD,XD,S,Staff,Myanmar
+XDD,XD,D,UN Diplomat,Myanmar
+XE,XE,,,Ghana
+CXE,XE,C,Consul,Ghana
+DXE,XE,D,Diplomat,Ghana
+SXE,XE,S,Staff,Ghana
+XED,XE,D,UN Diplomat,Ghana
+XF,XF,,,Turkey
+CXF,XF,C,Consul,Turkey
+DXF,XF,D,Diplomat,Turkey
+SXF,XF,S,Staff,Turkey
+XFD,XF,D,UN Diplomat,Turkey
+XG,XG,,,Norway
+CXG,XG,C,Consul,Norway
+DXG,XG,D,Diplomat,Norway
+SXG,XG,S,Staff,Norway
+XGD,XG,D,UN Diplomat,Norway
+XY,XY,,,UNKNOWN
+CXY,XY,C,Consul,UNKNOWN
+DXY,XY,D,Diplomat,UNKNOWN
+SXY,XY,S,Staff,UNKNOWN
+XYD,XY,D,UN Diplomat,UNKNOWN
+XZ,XZ,,,Australia
+CXZ,XZ,C,Consul,Australia
+DXZ,XZ,D,Diplomat,Australia
+SXZ,XZ,S,Staff,Australia
+XZD,XZ,D,UN Diplomat,Australia
+YA,YA,,,Armenia
+CYA,YA,C,Consul,Armenia
+DYA,YA,D,Diplomat,Armenia
+SYA,YA,S,Staff,Armenia
+YAD,YA,D,UN Diplomat,Armenia
+YG,YG,,,Georgia
+CYG,YG,C,Consul,Georgia
+DYG,YG,D,Diplomat,Georgia
+SYG,YG,S,Staff,Georgia
+YGD,YG,D,UN Diplomat,Georgia
+YJ,YJ,,,Tajikistan
+CYJ,YJ,C,Consul,Tajikistan
+DYJ,YJ,D,Diplomat,Tajikistan
+SYJ,YJ,S,Staff,Tajikistan
+YJD,YJ,D,UN Diplomat,Tajikistan
+YK,YK,,,Kazakhstan
+CYK,YK,C,Consul,Kazakhstan
+DYK,YK,D,Diplomat,Kazakhstan
+SYK,YK,S,Staff,Kazakhstan
+YKD,YK,D,UN Diplomat,Kazakhstan
+YM,YM,,,Moldova
+CYM,YM,C,Consul,Moldova
+DYM,YM,D,Diplomat,Moldova
+SYM,YM,S,Staff,Moldova
+YMD,YM,D,UN Diplomat,Moldova
+YR,YR,,,Russia
+CYR,YR,C,Consul,Russia
+DYR,YR,D,Diplomat,Russia
+SYR,YR,S,Staff,Russia
+YRD,YR,D,UN Diplomat,Russia
+YT,YT,,,Turkmenistan
+CYT,YT,C,Consul,Turkmenistan
+DYT,YT,D,Diplomat,Turkmenistan
+SYT,YT,S,Staff,Turkmenistan
+YTD,YT,D,UN Diplomat,Turkmenistan
+YY,YY,,,Kyrgyzstan
+CYY,YY,C,Consul,Kyrgyzstan
+DYY,YY,D,Diplomat,Kyrgyzstan
+SYY,YY,S,Staff,Kyrgyzstan
+YYD,YY,D,UN Diplomat,Kyrgyzstan
+YZ,YZ,,,Azerbaijan
+CYZ,YZ,C,Consul,Azerbaijan
+DYZ,YZ,D,Diplomat,Azerbaijan
+SYZ,YZ,S,Staff,Azerbaijan
+YZD,YZ,D,UN Diplomat,Azerbaijan
+EAB,AB,E,Staff,Taiwan

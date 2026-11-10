@@ -1,0 +1,13 @@
+<nav search_view="search" color="#A80C28">
+  <view name="ptf_overview" default="true" />
+  <view name="ptf_research_queue" />
+  <view name="ptf_research_code" />
+  <view name="ptf_sightings" />
+  <view name="ptf_sign_ins" />
+  <view name="search" />
+  <collection label="More">
+    <view name="alerts" />
+    <view name="reports" />
+    <view name="dashboards" />
+  </collection>
+</nav>

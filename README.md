@@ -3,7 +3,7 @@
 Decode a U.S. diplomatic license plate: type its letters (or scan a photo) to see the country, the
 mission role and the flag, log the vehicle you saw, and see which countries people look up most.
 
-Live at <https://flagthatplate.com>. Static pages on Cloudflare Pages, Pages Functions for the
+Live at <https://platethatflag.pages.dev>. Static pages on Cloudflare Pages, Pages Functions for the
 API, D1 (`platethatflag-db`) for lookups, sightings and accounts.
 
 ## Layout
@@ -20,6 +20,8 @@ API, D1 (`platethatflag-db`) for lookups, sightings and accounts.
 | `plates.csv`, `iso_mapping.json` | The plate codes (one `CODE,Country Role` row each, such as `EAB,Taiwan Staff`) and the country-to-flag map, fetched by the pages. A country `iso_mapping.json` doesn't list gets its flag from the browser's own English country names, so a new row needs no edit there |
 | `functions/` | Pages Functions: `/track`, `/unknown`, `/observe`, `/login`, `/signup`, `/logout`, `/me`, `/stats`, `/recent`, `/api/leaderboard`, `/ocr` |
 | `functions/_lib/splunk.js` | Splunk HTTP Event Collector forwarding (below) |
+| `functions/_lib/plate.js` | A plate's parts (code, role letter, serial) for the events, read the way the decoder reads a plate it doesn't know |
+| `splunk/flag_that_plate/` | The Splunk app: research queue for unknown codes, dashboards, alerts ([its README](splunk/flag_that_plate/README.md)); `node splunk/build.mjs` packages it |
 | `tests/` | `node --test tests/*.test.mjs` (Node 22 or newer, no dependencies) |
 
 ## Running locally
@@ -47,6 +49,11 @@ node --test tests/*.test.mjs
   Ecuador). It shows its role letter and the unlisted code, and a lookup logs it as unknown.
 - `tests/splunk.test.mjs` runs the HEC module against a local mock collector and calls the real
   `/track`, `/login`, `/unknown` and `/observe` handlers with a fake D1 database.
+- `tests/splunk-app.test.mjs` checks the Splunk app without a Splunk server: every `.conf` file and
+  view parses, every macro, lookup, view and dashboard token it uses is defined, its searches are
+  balanced, its lookups match `plates.csv`, the package holds the app folder and nothing else, and
+  the `ptf_plate_parts` macro, run by a small evaluator for the eval functions it uses, reads
+  plates the way the site does.
 - `tests/reader.test.mjs` checks the photo reader's pure parts: turning OCR text into plate
   candidates, when a reading counts as clear, and finding a row of characters in synthetic images
   (level, turned, light on dark).
@@ -191,13 +198,19 @@ plus:
 
 | `event_type` | Sent by | Fields |
 | --- | --- | --- |
-| `lookup` | `POST /track` | `country`, `plate`, `mission_role`, `full_plate`, `country_lookups`, `plate_lookups`, `user`, `user_id`, `anonymous`, `status` |
-| `unknown_plate` | `POST /unknown` | `plate`, `status` |
+| `lookup` | `POST /track` | `country`, `plate`, `mission_role`, `full_plate`, `entered_via`, `country_lookups`, `plate_lookups`, `user`, `user_id`, `anonymous`, `status` |
+| `unknown_plate` | `POST /unknown` | `plate`, `code`, `letters`, `role_letter`, `mission_role`, `serial`, `layout`, `plate_shaped`, `entered_via`, `status` |
 | `sighting` | `POST /observe` | `country`, `plate`, `city`, `state`, `vehicle_make`, `vehicle_model`, `vehicle_color`, `user`, `user_id`, `anonymous`, `status` |
 | `login` | `POST /login` | `signature`, `action` (`success`, `failure`), `reason` (`missing_fields`, `unknown_user`, `bad_password`), `user`, `user_id`, `status` |
 | `signup` | `POST /signup` | `signature`, `action`, `reason` (`missing_fields`, `too_short`, `duplicate_username`), `user`, `user_id`, `status` |
 | `logout` | `POST /logout` | `signature`, `action`, `user`, `user_id`, `status` |
 | `error` | any of the above on a 500 | `status`, `error` |
+
+`entered_via` is how the plate reached the decoder: `typed`, `photo` (the photo reader's reading,
+left as it was) or `link` (a shared `?plate=` link); pages from before the field send none.
+`layout` is `letters_first`, `serial_first`, `letters_only` or `other` (letters and digits mixed),
+and `plate_shaped` is true for a two-letter code with at most one role letter and four digits: the
+entries worth researching.
 
 Empty values are left out, so a field appears only when it was recorded. `action`, `app`,
 `reason`, `signature`, `user` and `user_id` use the CIM Authentication field names; to map
@@ -210,6 +223,28 @@ index=platethatflag event_type=lookup | stats count by country | sort - count
 index=platethatflag event_type=login action=failure | stats count by user, reason, src_ip_hash
 index=platethatflag event_type=unknown_plate | stats count by plate | sort - count
 index=platethatflag event_type=sighting | stats count by vehicle_make, vehicle_model
+```
+
+## Unknown plates and the Splunk app
+
+A plate whose code isn't in `plates.csv` gets an answer that says what its letters do tell (`DGK
+0001`: "D marks a diplomat's plate, but GK isn't in our list") and that the code will be researched.
+The page posts it to `/unknown`, which stores it in D1 (`unknown_queries`, unchanged) and sends an
+`unknown_plate` event with the plate's parts and how it was entered. The page says "Logged for
+research" only once the server has answered, and says so plainly when it couldn't log it. For a
+full plate it also asks where the car was seen; that sighting is saved like any other, under the
+country `UNKNOWN`, the name `plates.csv` already uses for codes it can't place.
+
+`splunk/flag_that_plate` is a Splunk app built on those events. An alert adds every new
+plate-shaped code to a research queue (a KV store collection); the Research queue dashboard shows
+each code's lookups, visitors, plates, roles and sightings; Research a code adds the listed codes it
+could be (a letter easy to misread or mistype, or the letters swapped) and records a status, the
+country and a note; identified codes come out as the rows to add to `plates.csv`. It also has an
+overview, sightings, and sign-in and error dashboards, CIM Authentication tags, and alerts for
+repeated sign-in failures and server errors. Install and use: [its README](splunk/flag_that_plate/README.md).
+
+```bash
+node splunk/build.mjs   # refresh its copy of plates.csv, write splunk/dist/flag_that_plate-<version>.spl
 ```
 
 ## Design notes

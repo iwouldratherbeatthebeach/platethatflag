@@ -1,5 +1,6 @@
 import { getUserFromRequest } from "./_lib/auth.js";
 import { forward } from "./_lib/splunk.js";
+import { ENTERED_VIA } from "./_lib/plate.js";
 
 async function sha256Hex(value) {
   const data = new TextEncoder().encode(value);
@@ -111,6 +112,7 @@ export async function onRequestPost(context) {
       plate: plateCode,
       mission_role: missionRole,
       full_plate: isFullPlate,
+      entered_via: ENTERED_VIA.has(body.enteredVia) ? body.enteredVia : undefined,
       country_lookups: row?.query_count,
       plate_lookups: plateCount,
       user: user?.username,

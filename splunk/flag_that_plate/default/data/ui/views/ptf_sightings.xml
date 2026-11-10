@@ -1,0 +1,119 @@
+<form version="1.1">
+  <label>Sightings</label>
+  <description>Vehicles visitors logged after a lookup: where, and what car. Sightings of plates the site couldn't name are filed under UNKNOWN and feed the research queue.</description>
+  <fieldset submitButton="false" autoRun="true">
+    <input type="time" token="time" searchWhenChanged="true">
+      <label>Time range</label>
+      <default>
+        <earliest>-30d@d</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <search id="sightings">
+    <query><![CDATA[`ptf_events` event_type="sighting"
+| `ptf_plate_parts`
+| `ptf_country_name`
+| fields _time plate code country city state vehicle_make vehicle_model vehicle_color user anonymous src_ip_hash]]></query>
+    <earliest>$time.earliest$</earliest>
+    <latest>$time.latest$</latest>
+  </search>
+  <row>
+    <panel>
+      <single>
+        <title>Sightings</title>
+        <search base="sightings">
+          <query><![CDATA[| stats count]]></query>
+        </search>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Of unknown plates</title>
+        <search base="sightings">
+          <query><![CDATA[| where upper(country)=="UNKNOWN" | stats count]]></query>
+        </search>
+        <option name="underLabel">feed the research queue</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">all</option>
+        <drilldown>
+          <link target="_self">ptf_research_queue</link>
+        </drilldown>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Spotters</title>
+        <search base="sightings">
+          <query><![CDATA[| stats dc(src_ip_hash) AS spotters]]></query>
+        </search>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Sightings over time</title>
+      <chart>
+        <search base="sightings">
+          <query><![CDATA[| eval kind=if(upper(country)=="UNKNOWN", "Unknown plate", "Known plate") | timechart count BY kind]]></query>
+        </search>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.stackMode">stacked</option>
+        <option name="charting.axisTitleX.visibility">collapsed</option>
+        <option name="charting.axisTitleY.visibility">collapsed</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="charting.drilldown">none</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Latest sightings</title>
+      <table>
+        <search base="sightings">
+          <query><![CDATA[| sort 0 -_time
+| eval seen=strftime(_time, "%Y-%m-%d %H:%M"), spotter=if(isnotnull(user), user, "Anonymous")
+| table seen plate code country city state vehicle_make vehicle_model vehicle_color spotter
+| rename seen AS Seen, plate AS Plate, code AS Code, country AS Country, city AS City, state AS State, vehicle_make AS Make, vehicle_model AS Model, vehicle_color AS Color, spotter AS Spotter]]></query>
+        </search>
+        <option name="count">20</option>
+        <option name="drilldown">row</option>
+        <drilldown>
+          <link target="_self">ptf_research_code?form.code=$row.Code|u$</link>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Cars</title>
+      <table>
+        <search base="sightings">
+          <query><![CDATA[| eval vehicle_make=coalesce(vehicle_make, "Not given"), vehicle_model=coalesce(vehicle_model, "-")
+| stats count AS Sightings dc(plate) AS Plates BY vehicle_make vehicle_model
+| sort 10 -Sightings
+| rename vehicle_make AS Make, vehicle_model AS Model]]></query>
+        </search>
+        <option name="count">10</option>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+    <panel>
+      <title>Places</title>
+      <table>
+        <search base="sightings">
+          <query><![CDATA[| eval city=coalesce(city, "Not given"), state=coalesce(state, "-")
+| stats count AS Sightings dc(plate) AS Plates BY city state
+| sort 10 -Sightings
+| rename city AS City, state AS State]]></query>
+        </search>
+        <option name="count">10</option>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+</form>

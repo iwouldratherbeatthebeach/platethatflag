@@ -1,0 +1,154 @@
+<form version="1.1">
+  <label>Research queue</label>
+  <description>Every plate-shaped code the site couldn't name: codes missing from plates.csv, and codes it lists as UNKNOWN. Pick a row to research the code.</description>
+  <fieldset submitButton="false" autoRun="true">
+    <input type="time" token="time" searchWhenChanged="true">
+      <label>Seen during</label>
+      <default>
+        <earliest>-90d@d</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+    <input type="dropdown" token="status" searchWhenChanged="true">
+      <label>Status</label>
+      <choice value="&quot;new&quot;, &quot;researching&quot;, &quot;identified&quot;">Still open</choice>
+      <choice value="&quot;new&quot;, &quot;researching&quot;, &quot;identified&quot;, &quot;added&quot;, &quot;not_a_code&quot;">All</choice>
+      <choice value="&quot;new&quot;">New</choice>
+      <choice value="&quot;researching&quot;">Researching</choice>
+      <choice value="&quot;identified&quot;">Identified</choice>
+      <choice value="&quot;added&quot;">Added to plates.csv</choice>
+      <choice value="&quot;not_a_code&quot;">Not a code</choice>
+      <default>"new", "researching", "identified"</default>
+    </input>
+  </fieldset>
+  <!-- every code in the queue, whenever it was seen, plus codes seen in the time range that the
+       alert hasn't queued yet; the counts are for the time range -->
+  <search id="queue">
+    <query><![CDATA[| inputlookup ptf_research
+| fields code status country note first_seen
+| rename country AS found, first_seen AS queued
+| append [search `ptf_needs_research`
+  | eval in_list=case(event_type=="unknown_plate", "not in plates.csv", event_type=="lookup", "listed as UNKNOWN")
+  | stats count(eval(event_type!="sighting")) AS lookups count(eval(event_type=="sighting")) AS sightings dc(src_ip_hash) AS visitors min(_time) AS seen_first max(_time) AS seen_last values(mission_role) AS roles values(plate) AS plates values(entered_via) AS entered_via values(in_list) AS in_list BY code]
+| stats first(status) AS status first(found) AS found first(note) AS note min(queued) AS queued sum(lookups) AS lookups sum(sightings) AS sightings sum(visitors) AS visitors min(seen_first) AS seen_first max(seen_last) AS last_seen values(roles) AS roles values(plates) AS plates values(entered_via) AS entered_via values(in_list) AS in_list BY code
+| eval status=coalesce(status, "new"), lookups=coalesce(lookups, 0), sightings=coalesce(sightings, 0), visitors=coalesce(visitors, 0), first_seen=coalesce(queued, seen_first)
+| fields - queued seen_first
+| lookup ptf_plate_codes base_code AS code OUTPUT country AS listed_as
+| eval listed_as=mvdedup(listed_as)]]></query>
+    <earliest>$time.earliest$</earliest>
+    <latest>$time.latest$</latest>
+  </search>
+  <row>
+    <panel>
+      <single>
+        <title>To research</title>
+        <search base="queue">
+          <query><![CDATA[| where status=="new" OR status=="researching" | stats count]]></query>
+        </search>
+        <option name="underLabel">codes new or in progress</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Identified</title>
+        <search base="queue">
+          <query><![CDATA[| where status=="identified" | stats count]]></query>
+        </search>
+        <option name="underLabel">ready to add to plates.csv</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Lookups</title>
+        <search base="queue">
+          <query><![CDATA[| stats sum(lookups) AS lookups | fillnull value=0 lookups]]></query>
+        </search>
+        <option name="underLabel">of these codes</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Sightings</title>
+        <search base="queue">
+          <query><![CDATA[| stats sum(sightings) AS sightings | fillnull value=0 sightings]]></query>
+        </search>
+        <option name="underLabel">with a place or a car</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Codes</title>
+      <table>
+        <search base="queue">
+          <query><![CDATA[| where in(status, $status$)
+| eval rank=case(status=="new", 1, status=="researching", 2, status=="identified", 3, status=="added", 4, true(), 5)
+| sort 0 rank, -lookups
+| eval first_seen=strftime(first_seen, "%Y-%m-%d"), last_seen=strftime(last_seen, "%Y-%m-%d %H:%M")
+| eval plates=mvjoin(mvindex(plates, 0, 4), ", "), roles=mvjoin(roles, ", "), entered_via=mvjoin(entered_via, ", "), in_list=mvjoin(in_list, ", ")
+| eval listed_as=if(isnull(listed_as), "", mvjoin(listed_as, " / "))
+| table code status found lookups visitors sightings roles plates entered_via in_list listed_as first_seen last_seen note
+| rename code AS Code, status AS Status, found AS "Identified as", lookups AS Lookups, visitors AS Visitors, sightings AS Sightings, roles AS Roles, plates AS "Plates seen", entered_via AS "Entered via", in_list AS "plates.csv", listed_as AS "Letters listed as", first_seen AS "First seen", last_seen AS "Last seen", note AS Note]]></query>
+        </search>
+        <option name="count">25</option>
+        <option name="wrap">true</option>
+        <option name="rowNumbers">false</option>
+        <option name="drilldown">row</option>
+        <drilldown>
+          <link target="_self">ptf_research_code?form.code=$row.Code|u$</link>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Rows to add to plates.csv</title>
+      <html>
+        <p>Codes marked Identified, written the way plates.csv writes them: the code alone, then with each role letter. Add the rows on GitHub, then mark each code <em>Added to plates.csv</em> on the Research a code page.</p>
+      </html>
+      <table>
+        <search>
+          <query><![CDATA[| inputlookup ptf_research
+| where status=="identified" AND len(country) > 0
+| sort 0 code
+| eval row=mvappend(code.",".country, "C".code.",".country." Consul", "D".code.",".country." Diplomat", "S".code.",".country." Staff", code."D,".country." UN Diplomat")
+| mvexpand row
+| table row
+| rename row AS "plates.csv rows"]]></query>
+        </search>
+        <option name="count">50</option>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+    <panel>
+      <title>Entries that aren't plate-shaped</title>
+      <html>
+        <p>Typos, state plates and photo misreads: logged, but not queued for research.</p>
+      </html>
+      <table>
+        <search>
+          <query><![CDATA[`ptf_events` event_type="unknown_plate"
+| `ptf_plate_parts`
+| where plate_shaped=="false"
+| eval entered_via=coalesce(entered_via, "not recorded")
+| stats count AS times values(entered_via) AS entered_via max(_time) AS last_seen BY plate
+| sort 20 -times
+| eval last_seen=strftime(last_seen, "%Y-%m-%d %H:%M")
+| rename plate AS Entry, times AS Times, entered_via AS "Entered via", last_seen AS "Last seen"]]></query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="count">20</option>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+</form>

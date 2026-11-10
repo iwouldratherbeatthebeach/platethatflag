@@ -132,6 +132,9 @@ async function runLookup({ fromUrl = false } = {}) {
     return;
   }
 
+  // for the logs: a shared link, the photo reader's reading left as it was, or typed
+  const enteredVia = fromUrl ? "link" : fromPhoto && normalizePlate(fromPhoto) === raw ? "photo" : "typed";
+
   const id = ++state.lookupId;
   state.last = null;
   el.sighting.hidden = true;
@@ -145,28 +148,7 @@ async function runLookup({ fromUrl = false } = {}) {
 
   if (!code || !desc) {
     el.result.hidden = true;
-    api("/unknown", { method: "POST", body: { plateCode: raw } }).catch(() => {});
-    const parts = decodePlate(raw, state.index);
-    const info = ROLE_INFO[parts.role];
-    const message = h(
-      "div",
-      { class: "message message--notice", role: "status" },
-      icon("info"),
-      h(
-        "div",
-        null,
-        h("strong", null, parts.countryCode ? `We don't know the code “${parts.countryCode}” yet` : `We don't know “${raw}” yet`),
-        h(
-          "p",
-          null,
-          info ? `${parts.prefix || parts.suffix} marks ${info.plate}, but ${parts.countryCode} isn't in our list. ` : "",
-          "Plate codes change and new ones are issued. We've logged this plate so it can be reviewed and added."
-        )
-      )
-    );
-    el.messages.replaceChildren(message);
-    arrive(message);
-    announce(`No match for ${raw}. The code has been logged for review.`);
+    showUnknown(raw, enteredVia, id);
     return;
   }
 
@@ -177,7 +159,7 @@ async function runLookup({ fromUrl = false } = {}) {
 
   setBusy(el.submit, true);
   const [track] = await Promise.allSettled([
-    api("/track", { method: "POST", body: { country, plateCode: raw, missionRole: role } }),
+    api("/track", { method: "POST", body: { country, plateCode: raw, missionRole: role, enteredVia } }),
     loadSummary(country, id)
   ]);
   setBusy(el.submit, false);
@@ -193,6 +175,52 @@ async function runLookup({ fromUrl = false } = {}) {
   loadTop();
   loadRecent();
   if (fromUrl) el.result.scrollIntoView({ block: "nearest" });
+}
+
+/**
+ * A plate whose code isn't in plates.csv: say what the letters do tell us, log it for research
+ * (saying so only once the server has it), and for a full plate ask where it was seen.
+ */
+function showUnknown(raw, enteredVia, id) {
+  const parts = decodePlate(raw, state.index);
+  const info = ROLE_INFO[parts.role];
+  const status = h("p", { class: "message__status" }, "Logging it for research…");
+  const message = h(
+    "div",
+    { class: "message message--notice", role: "status" },
+    icon("info"),
+    h(
+      "div",
+      null,
+      h("strong", null, parts.countryCode ? `We don't know the code “${parts.countryCode}” yet` : `We don't know “${raw}” yet`),
+      h(
+        "p",
+        null,
+        info ? `${parts.prefix || parts.suffix} marks ${info.plate}, but ${parts.countryCode} isn't in our list. ` : "",
+        "Codes are reassigned and new ones are issued, so we research the codes we don't know and add them once they're identified."
+      ),
+      status
+    )
+  );
+  el.messages.replaceChildren(message);
+  arrive(message);
+  announce(`No match for ${raw}.`);
+
+  if (isFullPlate(raw)) {
+    // a sighting of an unlisted plate is filed under UNKNOWN, as plates.csv names countries it doesn't know
+    state.last = { country: "UNKNOWN", plate: raw };
+    showSighting(parts, { unknown: true });
+  }
+
+  api("/unknown", { method: "POST", body: { plateCode: raw, enteredVia } })
+    .then(({ ok }) => ok)
+    .catch(() => false)
+    .then((logged) => {
+      if (id !== state.lookupId) return; // another lookup has replaced this message
+      status.textContent = logged
+        ? "Logged for research."
+        : "We couldn't log it just now. Look it up again in a moment.";
+    });
 }
 
 function updateUrl(raw) {
@@ -341,8 +369,11 @@ function countryLinks(country) {
 }
 
 /* ---------------------------------------------------------------- sighting (vehicle observation) */
-function showSighting(d) {
-  el.sightingPlate.textContent = `${d.cleaned} · ${displayCountry(d.country)}`;
+function showSighting(d, { unknown = false } = {}) {
+  el.sightingPlate.textContent = `${d.cleaned} · ${unknown ? "Unknown code" : displayCountry(d.country)}`;
+  el.sightingIntro.textContent = unknown
+    ? "Where did you see it? The place and the car help us work out whose plate it is. Every field is optional."
+    : "Seen this car? Add what you noticed. Every field is optional.";
   el.sightingStatus.hidden = true;
   el.sighting.hidden = false;
   arrive(el.sighting);
@@ -661,6 +692,7 @@ function cacheElements() {
   el.sighting = $("[data-sighting]");
   el.sightingForm = $("#sighting-form");
   el.sightingPlate = $("[data-sighting-plate]");
+  el.sightingIntro = $("[data-sighting-intro]");
   el.sightingStatus = $("[data-sighting-status]");
   el.top = $("[data-top]");
   el.recent = $("[data-recent]");

@@ -1,0 +1,28 @@
+# Everything in the app can be read by everyone and changed by admins.
+[]
+access = read : [ * ], write : [ admin, sc_admin ]
+export = none
+
+# Shared with every app, so searches anywhere, and the CIM Authentication data model, see the
+# source type's fields, the event types and tags, and the ptf_ macros.
+[props]
+export = system
+
+[eventtypes]
+export = system
+
+[tags]
+export = system
+
+[macros]
+export = system
+
+# The research queue: researchers (power users and admins) record findings in it. Shared with every
+# app too, so the exported ptf_research_set macro works from Search & Reporting.
+[collections/ptf_research]
+access = read : [ * ], write : [ admin, power, sc_admin ]
+export = system
+
+[transforms/ptf_research]
+access = read : [ * ], write : [ admin, power, sc_admin ]
+export = system

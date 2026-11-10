@@ -247,6 +247,13 @@ test("/track: same response as before, lookup event sent in the background", asy
   assert.equal(e.event.anonymous, true);
   assert.equal(e.event.src_ip_hash, await sha256Hex("203.0.113.7"));
   assert.equal(e.index, "platethatflag");
+  assert.ok(!("entered_via" in e.event), "older pages don't say how the plate was entered");
+
+  reset();
+  const viaLink = context({ body: { country: "Canada", plateCode: "DTG4417", missionRole: "Diplomat", enteredVia: "link" }, env: hecEnv() });
+  await track(viaLink);
+  await Promise.all(viaLink.pending);
+  assert.equal(events()[0].event.entered_via, "link");
 });
 
 test("/track: with forwarding off nothing is sent and nothing is scheduled", async () => {
@@ -302,9 +309,61 @@ test("/unknown and /observe send their own event types", async () => {
   await Promise.all([...u.pending, ...o.pending]);
   const byType = Object.fromEntries(events().map((e) => [e.event.event_type, e.event]));
   assert.equal(byType.unknown_plate.plate, "ZZQ9");
+  assert.equal(byType.unknown_plate.code, "ZZQ");
+  assert.equal(byType.unknown_plate.plate_shaped, false, "three letters with no role letter isn't a plate code");
+  assert.ok(!("entered_via" in byType.unknown_plate), "a page that doesn't say how the plate was entered gets no guess");
   assert.equal(byType.sighting.vehicle_make, "Lexus");
   assert.equal(byType.sighting.city, "Washington");
   assert.ok(!("vehicle_model" in byType.sighting), "empty optional fields are left out");
+});
+
+test("/unknown: the plate's parts and how it was entered go to Splunk for the research queue", async () => {
+  reset();
+  const db = fakeDb();
+  const u = context({ path: "/unknown", body: { plateCode: "DGK0001", enteredVia: "photo" }, env: hecEnv(), db });
+  const res = await unknown(u);
+  assert.equal(res.status, 200);
+  assert.deepEqual(await res.json(), { ok: true, logged: true });
+  await Promise.all(u.pending);
+  const [e] = events();
+  assert.equal(e.event.event_type, "unknown_plate");
+  assert.equal(e.event.plate, "DGK0001");
+  assert.equal(e.event.code, "GK");
+  assert.equal(e.event.letters, "DGK");
+  assert.equal(e.event.role_letter, "D");
+  assert.equal(e.event.mission_role, "Diplomat");
+  assert.equal(e.event.serial, "0001");
+  assert.equal(e.event.layout, "letters_first");
+  assert.equal(e.event.plate_shaped, true);
+  assert.equal(e.event.entered_via, "photo");
+  assert.match(db.statements[0], /^INSERT INTO unknown_queries \(plate_code, ip_country, hashed_ip, user_agent\)/, "the D1 row is unchanged");
+
+  // a made-up entry method is left out, and a long value is cut before it is stored or sent
+  reset();
+  const db2 = fakeDb();
+  const long = context({ path: "/unknown", body: { plateCode: "X".repeat(500), enteredVia: "<script>" }, env: hecEnv(), db: db2 });
+  assert.equal((await unknown(long)).status, 200);
+  await Promise.all(long.pending);
+  const [e2] = events();
+  assert.equal(e2.event.plate.length, 32);
+  assert.ok(!("entered_via" in e2.event));
+});
+
+test("plate parts: role letter, code and serial, as the decoder reads an unlisted plate", async () => {
+  const { plateParts } = await import("../functions/_lib/plate.js");
+  const pick = ({ code, role_letter, mission_role, serial, layout, plate_shaped }) => ({ code, role_letter, mission_role, serial, layout, plate_shaped });
+  assert.deepEqual(pick(plateParts("dgk 0001")), { code: "GK", role_letter: "D", mission_role: "Diplomat", serial: "0001", layout: "letters_first", plate_shaped: true });
+  assert.deepEqual(pick(plateParts("1034 CYD")), { code: "CY", role_letter: "D", mission_role: "UN Diplomat", serial: "1034", layout: "serial_first", plate_shaped: true });
+  assert.equal(plateParts("1034 CZD").code, "CZ", "a serial-first plate's D comes last, even after a C");
+  assert.equal(plateParts("CZD 1034").code, "ZD", "a letters-first plate's role letter comes first");
+  assert.deepEqual(pick(plateParts("SGK")), { code: "GK", role_letter: "S", mission_role: "Staff", serial: "", layout: "letters_only", plate_shaped: true });
+  assert.deepEqual(pick(plateParts("CXY 12")), { code: "XY", role_letter: "C", mission_role: "Consul", serial: "12", layout: "letters_first", plate_shaped: true });
+  assert.deepEqual(pick(plateParts("ZZ 1234")), { code: "ZZ", role_letter: "", mission_role: "", serial: "1234", layout: "letters_first", plate_shaped: true });
+  // a three-letter block with no role letter, too many digits, mixed letters and digits: not plate-shaped
+  assert.equal(plateParts("XQZ").plate_shaped, false);
+  assert.equal(plateParts("DGK 00001").plate_shaped, false);
+  assert.deepEqual(pick(plateParts("D1AF")), { code: "", role_letter: "", mission_role: "", serial: "1", layout: "other", plate_shaped: false });
+  assert.equal(plateParts("").layout, "other");
 });
 
 test("/signup: success and duplicate usernames are audited, never the password", async () => {
